@@ -12,6 +12,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 
 // ---- Importação das rotas ----
 const authRoutes         = require('./routes/authRoutes');
@@ -24,12 +25,18 @@ const app = express();
 
 // ---- Middlewares globais ----
 
+// Configurar CORS para aceitar requisições do frontend
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+
 // Permite que o Express leia o corpo das requisições em JSON
 app.use(express.json());
-
-// TODO (opcional): adicionar cors se o frontend rodar em outra porta
-// const cors = require('cors');
-// app.use(cors());
 
 // ---- Registro das rotas ----
 // Cada prefixo aponta para um arquivo de rotas separado
