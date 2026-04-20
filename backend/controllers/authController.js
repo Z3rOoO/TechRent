@@ -26,7 +26,7 @@ const registro = async (req, res) => {
     } = req.body;
 
 
-    senhaHash = await db.hashPassword(senha);
+    const senhaHash = await db.hashPassword(senha);
 
     // cria usuário
     const datauser = { nome, email, nivel_acesso, senha: senhaHash };

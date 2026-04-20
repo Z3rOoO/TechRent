@@ -72,6 +72,7 @@ export default function Sidebar({ role = "cliente", onCompactChange }) {
       { label: "Chamados", href: "/chamados", icon: "tickets" },
       { label: "Equipamentos", href: "/equipamentos", icon: "equipment" },
       { label: "Manutenção", href: "/manutencao", icon: "maintenance" },
+      { label: "Usuários", href: "/admin/users", icon: "settings" },
     ],
   };
 

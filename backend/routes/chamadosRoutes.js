@@ -19,4 +19,7 @@ router.post('/', autenticar, autorizar('cliente', 'admin'), ctrl.criar);
 // Atualizar o status do chamado (técnico, admin)
 router.put('/:id/status', autenticar, autorizar('tecnico', 'admin'), ctrl.atualizarStatus);
 
+// Aceitar um chamado (técnico, admin)
+router.put('/:id/aceitar', autenticar, autorizar('tecnico', 'admin'), ctrl.aceitar);
+
 module.exports = router;

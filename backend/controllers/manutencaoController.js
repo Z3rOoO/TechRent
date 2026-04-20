@@ -32,19 +32,37 @@ const listar = async (req, res) => {
 const registrar = async (req, res) => {
   try {
     const { chamado_id, equipamento_id, descricao } = req.body; // obtem os dados do corpo da requisição
-    const novoReparo = { chamado_id, equipamento_id, descricao }; // cria um objeto com os dados do novo reparo
-    const id = await db.Create("manutencao", novoReparo) // insere o novo reparo no banco de dados e obtem o ID gerado
+    
+    // Verifica se o chamado existe
+    const chamado = await db.Read("chamados", `id = ${chamado_id}`);
+    if (chamado.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: "Chamado não encontrado"
+      });
+    }
+
+    // Cria o registro de manutenção
+    const novoReparo = { chamado_id, equipamento_id, descricao };
+    const id = await db.Create("historico_manutencao", novoReparo);
+    
+    // Atualiza o chamado para "resolvido"
+    await db.Update("chamados", { status: "resolvido" }, `id = ${chamado_id}`);
+    
+    // Atualiza o equipamento para "operacional"
+    await db.Update("equipamentos", { status: "operacional" }, `id = ${equipamento_id}`);
+
     return res.status(201).json({
       sucesso: true,
       mensagem: "Reparo registrado com sucesso",
       dados: { id, ...novoReparo }
-    })
+    });
   } catch (e) {
     return res.status(500).json({
       sucesso: false,
       mensagem: "Erro ao registrar o reparo",
       erro: e.message
-    })
+    });
   }
 };
 

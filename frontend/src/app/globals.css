@@ -1,8 +1,29 @@
 @import "tailwindcss";
 
+/* =========================================
+   DESIGN SYSTEM - PREMIUM BLACK & WHITE
+   ========================================= */
+
 :root {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
+  /* Color Palette */
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-gray-950: #0a0a0a;
+  --color-gray-900: #1a1a1a;
+  --color-gray-800: #2d2d2d;
+  --color-gray-700: #404040;
+  --color-gray-600: #525252;
+  --color-gray-500: #656565;
+  --color-gray-400: #808080;
+  --color-gray-300: #a0a0a0;
+  --color-gray-200: #d4d4d4;
+  --color-gray-100: #e7e7e7;
+  --color-gray-50: #f5f5f5;
+
+  /* Background */
+  --background: #0a0a0a;
+  --foreground: #f5f5f5;
+
   color-scheme: dark;
 }
 
@@ -14,58 +35,52 @@
 }
 
 * {
-  @apply selection:bg-slate-600 selection:text-white;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  background-attachment: fixed;
+  @apply selection:bg-gray-700 selection:text-white;
 }
 
 html {
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: #475569 #1e293b;
+  scrollbar-color: #404040 #1a1a1a;
 }
 
-/* Scrollbar Styling */
+body {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-attachment: fixed;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+/* =========================================
+   SCROLLBAR STYLING
+   ========================================= */
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: #1a1a1a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 4px;
+  background: #404040;
+  border-radius: 5px;
+  transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #525252;
 }
 
-/* Smooth Scrolling */
-.scroll-smooth {
-  scroll-behavior: smooth;
-}
+/* =========================================
+   KEYFRAME ANIMATIONS
+   ========================================= */
 
-/* Animações Customizadas */
-@keyframes slide-in-from-top-2 {
-  from {
-    opacity: 0;
-    transform: translateY(-0.5rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Fade In */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -75,10 +90,11 @@ html {
   }
 }
 
+/* Slide In From Bottom */
 @keyframes slide-in-from-bottom {
   from {
     opacity: 0;
-    transform: translateY(1rem);
+    transform: translateY(1.5rem);
   }
   to {
     opacity: 1;
@@ -86,32 +102,166 @@ html {
   }
 }
 
+/* Slide In From Top */
+@keyframes slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide In From Left */
+@keyframes slide-in-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide In From Right */
+@keyframes slide-in-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Scale In */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Float */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 }
 
+/* Subtle Pulse */
 @keyframes pulse-subtle {
   0%, 100% {
     opacity: 1;
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.75;
   }
 }
 
-/* Smooth Transitions */
-.transition-smooth {
-  @apply transition-all duration-300 ease-out;
+/* Pulse Glow */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
 }
 
-/* Glassmorphism Effects */
-.glass {
-  @apply backdrop-blur-md bg-white/10 border border-white/20;
+/* Shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Bounce */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* =========================================
+   ANIMATION UTILITIES
+   ========================================= */
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-slide-in-from-bottom {
+  animation: slide-in-from-bottom 0.5s ease-out forwards;
+}
+
+.animate-slide-in-from-top {
+  animation: slide-in-from-top 0.5s ease-out forwards;
+}
+
+.animate-slide-in-from-left {
+  animation: slide-in-from-left 0.5s ease-out forwards;
+}
+
+.animate-slide-in-from-right {
+  animation: slide-in-from-right 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 1.5s ease-in-out infinite;
+}
+
+/* =========================================
+   GLASSMORPHISM & BACKDROP EFFECTS
+   ========================================= */
+
+.glass-effect {
+  @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg;
+}
+
+.glass-effect-md {
+  @apply backdrop-blur-lg bg-white/8 border border-white/15 rounded-lg;
+}
+
+.glass-effect-lg {
+  @apply backdrop-blur-2xl bg-white/10 border border-white/20 rounded-lg;
 }
 
 .glass-dark {
@@ -122,48 +272,122 @@ html {
   @apply backdrop-blur-md bg-slate-950/60 border border-slate-700/40;
 }
 
-/* Hover Effects */
+/* =========================================
+   GRADIENT UTILITIES
+   ========================================= */
+
+.gradient-text {
+  @apply bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent;
+}
+
+.gradient-border {
+  position: relative;
+  border: 1px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #404040, #808080) border-box;
+}
+
+/* =========================================
+   SHADOW & ELEVATION
+   ========================================= */
+
+.elevation-1 {
+  @apply shadow-sm shadow-black/20;
+}
+
+.elevation-2 {
+  @apply shadow-md shadow-black/30;
+}
+
+.elevation-3 {
+  @apply shadow-lg shadow-black/40;
+}
+
+.elevation-4 {
+  @apply shadow-xl shadow-black/50;
+}
+
+/* =========================================
+   HOVER EFFECTS
+   ========================================= */
+
 .hover-lift {
-  @apply hover:scale-105 hover:shadow-xl transition-all duration-300;
+  @apply hover:-translate-y-1 hover:shadow-lg hover:shadow-black/30 transition-all duration-300 cursor-pointer;
 }
 
 .hover-glow {
-  @apply hover:shadow-lg hover:shadow-slate-600/30 transition-all duration-300;
+  @apply hover:shadow-lg hover:shadow-gray-600/30 transition-all duration-300;
 }
 
-/* Text Effects */
-.text-gradient {
-  @apply bg-linear-to-r from-slate-100 to-slate-400 bg-clip-text text-transparent;
+.hover-brighten {
+  @apply hover:shadow-lg hover:shadow-gray-600/30 transition-all duration-300;
 }
 
-/* Loading Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+/* =========================================
+   CARD & CONTAINER STYLES
+   ========================================= */
+
+.card-base {
+  @apply rounded-lg border border-gray-700/30 bg-gray-900/50 backdrop-blur-sm;
 }
 
-.animate-shimmer {
+.card-elevated {
+  @apply rounded-lg border border-gray-700/40 bg-gray-800/40 backdrop-blur-md shadow-lg shadow-black/30;
+}
+
+/* =========================================
+   BUTTON EFFECTS
+   ========================================= */
+
+.btn-base {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-1 focus:ring-offset-gray-950;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-1 focus:ring-offset-gray-950 bg-white text-black hover:bg-gray-200 hover:shadow-lg shadow-white/20;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-1 focus:ring-offset-gray-950 bg-gray-700 text-gray-100 hover:bg-gray-600 hover:shadow-lg shadow-black/20;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-1 focus:ring-offset-gray-950 text-gray-300 border border-gray-700 hover:bg-gray-800/50 hover:text-white;
+}
+
+/* =========================================
+   INPUT STYLES
+   ========================================= */
+
+input, textarea, select {
+  @apply transition-all duration-300;
+}
+
+input:focus, textarea:focus, select:focus {
+  @apply outline-none ring-2 ring-gray-600 ring-offset-2 ring-offset-gray-950;
+}
+
+/* =========================================
+   LOADING SKELETON
+   ========================================= */
+
+.skeleton {
+  @apply bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700;
+  background-size: 1000px 100%;
   animation: shimmer 2s infinite;
 }
 
-/* Tailwind Animation Utilities */
-.animate-slide-in-from-bottom {
-  animation: slide-in-from-bottom 0.4s ease-out forwards;
+/* =========================================
+   SCROLL REVEAL (Intersection Observer companion)
+   ========================================= */
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(2rem);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
-.animate-slide-in-from-top {
-  animation: slide-in-from-top-2 0.4s ease-out forwards;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.4s ease-out forwards;
-}
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-  background-size: 1000px 100%;
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
 }

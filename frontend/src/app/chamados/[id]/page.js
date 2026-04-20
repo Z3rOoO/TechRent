@@ -16,7 +16,9 @@ export default function ChamadoDetalhePage() {
   const [chamado, setChamado] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [user, setUser] = useState(null);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("techrent_user");
@@ -38,7 +40,7 @@ export default function ChamadoDetalhePage() {
         if (data.sucesso === false) {
           setError(data.mensagem || "Chamado não encontrado");
         } else {
-          setChamado(data.dados || data);
+          setChamado(data.dados?.[0] || data.dados);
         }
       })
       .catch((e) => setError(e.message))
@@ -88,6 +90,68 @@ export default function ChamadoDetalhePage() {
     }
   };
 
+  const handleAceitarChamado = async () => {
+    setUpdating(true);
+    setError(null);
+    const token = localStorage.getItem("techrent_token");
+
+    try {
+      const response = await fetch(`http://localhost:3001/chamados/${chamadoId}/aceitar`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      const data = await response.json();
+
+      if (data.sucesso) {
+        setSuccess("Chamado aceito com sucesso!");
+        setChamado({ ...chamado, status: "em_atendimento", tecnico_id: user.id });
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError(data.mensagem || "Erro ao aceitar chamado");
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleAtualizarStatus = async (novoStatus) => {
+    setUpdating(true);
+    setError(null);
+    const token = localStorage.getItem("techrent_token");
+
+    try {
+      const response = await fetch(`http://localhost:3001/chamados/${chamadoId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: novoStatus }),
+      });
+
+      const data = await response.json();
+
+      if (data.sucesso) {
+        setSuccess(`Chamado marcado como ${novoStatus}!`);
+        setChamado({ ...chamado, status: novoStatus });
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError(data.mensagem || "Erro ao atualizar chamado");
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   if (loading) {
     return (
       <Container>
@@ -98,7 +162,7 @@ export default function ChamadoDetalhePage() {
     );
   }
 
-  if (error) {
+  if (error && !chamado) {
     return (
       <Container>
         <div className="space-y-6 py-8">
@@ -135,11 +199,29 @@ export default function ChamadoDetalhePage() {
       })
     : "Data não disponível";
 
+  const canAccept = user?.nivel_acesso === "tecnico" && chamado.status === "aberto";
+  const canUpdateStatus = (user?.nivel_acesso === "tecnico" || user?.nivel_acesso === "admin") && 
+                          chamado.status !== "resolvido" && 
+                          chamado.status !== "cancelado";
+
   return (
     <Container>
       <div className="max-w-3xl mx-auto space-y-8 py-8 animate-fade-in">
+        {/* Mensagens de feedback */}
+        {error && (
+          <Alert variant="destructive" className="animate-slide-in-from-bottom">
+            <p>⚠ {error}</p>
+          </Alert>
+        )}
+
+        {success && (
+          <Alert variant="success" className="animate-slide-in-from-bottom">
+            <p>✓ {success}</p>
+          </Alert>
+        )}
+
         {/* Header com Voltar */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-slide-in-from-bottom">
           <Button onClick={() => router.back()} variant="outline" size="sm">
             ← Voltar
           </Button>
@@ -180,7 +262,7 @@ export default function ChamadoDetalhePage() {
             </CardHeader>
             <CardContent>
               <p className="text-slate-200">
-                {chamado.equipamento_nome || chamado.equipamento_id || "Não especificado"}
+                {chamado.equipamento_nome || `#${chamado.equipamento_id}`}
               </p>
             </CardContent>
           </Card>
@@ -191,7 +273,7 @@ export default function ChamadoDetalhePage() {
             </CardHeader>
             <CardContent>
               <p className="text-slate-200">
-                {chamado.tecnico_nome || "Não atribuído"}
+                {chamado.tecnico_nome || chamado.tecnico_id ? `#${chamado.tecnico_id}` : "Não atribuído"}
               </p>
             </CardContent>
           </Card>
@@ -209,33 +291,45 @@ export default function ChamadoDetalhePage() {
           </CardContent>
         </Card>
 
-        {/* Solução (se existir) */}
-        {chamado.solucao && (
-          <Card className="border-green-700/30 bg-green-950/20 animate-slide-in-from-bottom" style={{ animationDelay: "0.6s" }}>
+        {/* Ações para Técnico/Admin */}
+        {(canAccept || canUpdateStatus) && (
+          <Card className="border-blue-700/30 bg-blue-950/20 animate-slide-in-from-bottom" style={{ animationDelay: "0.6s" }}>
             <CardHeader>
-              <CardTitle className="text-green-400">Solução Aplicada</CardTitle>
+              <CardTitle className="text-blue-400">Ações Disponíveis</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">
-                {chamado.solucao}
-              </p>
+            <CardContent className="space-y-3">
+              {canAccept && (
+                <Button
+                  onClick={handleAceitarChamado}
+                  disabled={updating}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                >
+                  {updating ? "Aceitando..." : "✓ Aceitar Chamado"}
+                </Button>
+              )}
+
+              {canUpdateStatus && chamado.status === "em_atendimento" && (
+                <Button
+                  onClick={() => handleAtualizarStatus("resolvido")}
+                  disabled={updating}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                >
+                  {updating ? "Atualizando..." : "✓ Marcar como Resolvido"}
+                </Button>
+              )}
+
+              {canUpdateStatus && chamado.status !== "resolvido" && (
+                <Button
+                  onClick={() => handleAtualizarStatus("cancelado")}
+                  disabled={updating}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  {updating ? "Cancelando..." : "✕ Cancelar Chamado"}
+                </Button>
+              )}
             </CardContent>
           </Card>
-        )}
-
-        {/* Ações */}
-        {chamado.status === "aberto" && user?.nivel_acesso === "cliente" && (
-          <div className="flex gap-4 pt-4 animate-slide-in-from-bottom" style={{ animationDelay: "0.7s" }}>
-            <Button
-              onClick={() => router.push(`/chamados/${chamadoId}/editar`)}
-              className="flex-1"
-            >
-              Editar
-            </Button>
-            <Button variant="outline" className="flex-1">
-              Cancelar Chamado
-            </Button>
-          </div>
         )}
       </div>
     </Container>

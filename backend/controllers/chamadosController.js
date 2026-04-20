@@ -100,28 +100,94 @@ const criar = async (req, res) => {
 // PUT /chamados/:id/status - atualiza o status do chamado (técnico/admin)
 // Body esperado: { status, tecnico_id (opcional) }
 const atualizarStatus = async (req, res) => {
-  // TODO: ex: aberto -> em_atendimento -> resolvido
-  //       ao resolver, atualizar equipamentos.status para 'operacional'
-  const { id } = req.params; // obtém o ID do usuário a partir dos parâmetros da rota
-        const { status, tecnico_id } = req.body; // obtém os dados atualizados do usuário a partir do corpo da requisição
-        const data = {
-            status, 
-            tecnico_id
-        }
-        try {
-            const result = await db.Update("chamados", data, `id = ${id}`) // atualiza o usuário na tabela "usuarios" usando a função update do database.js, filtrando pelo ID
-            return res.status(200).json({
-                sucesso: true,
-                mensagem: "chamado atualizado com sucesso",
-                dados: result
-            })
-        } catch (e) {
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: "Erro ao atualizar o usuário",
-                erro: e.message
-            })
-        }
+  // Fluxo: aberto -> em_atendimento -> resolvido
+  // Ao resolver, atualizar equipamentos.status para 'operacional'
+  const { id } = req.params;
+  const { status, tecnico_id } = req.body;
+  
+  try {
+    // Busca o chamado para saber qual equipamento atualizar
+    const chamado = await db.Read("chamados", `id = ${id}`);
+    
+    if (chamado.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: "Chamado não encontrado"
+      });
+    }
+
+    const data = { status };
+    if (tecnico_id) data.tecnico_id = tecnico_id;
+    
+    // Atualiza o status do chamado
+    await db.Update("chamados", data, `id = ${id}`);
+    
+    // Se o status é "resolvido", atualiza o equipamento para "operacional"
+    if (status === "resolvido") {
+      await db.Update("equipamentos", { status: "operacional" }, `id = ${chamado[0].equipamento_id}`);
+    }
+    
+    // Se o status é "em_atendimento", atualiza o equipamento para "em_manutencao"
+    if (status === "em_atendimento") {
+      await db.Update("equipamentos", { status: "em_manutencao" }, `id = ${chamado[0].equipamento_id}`);
+    }
+
+    return res.status(200).json({
+      sucesso: true,
+      mensagem: "Chamado atualizado com sucesso",
+      dados: { id, ...data }
+    });
+  } catch (e) {
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: "Erro ao atualizar o chamado",
+      erro: e.message
+    });
+  }
 };
 
-module.exports = { listar, buscarPorId, criar, atualizarStatus };
+// PUT /chamados/:id/aceitar - técnico aceita o chamado
+const aceitar = async (req, res) => {
+  const { id } = req.params;
+  const tecnico_id = req.usuario.id; // obtém o ID do técnico do token JWT
+
+  try {
+    // Busca o chamado
+    const chamado = await db.Read("chamados", `id = ${id}`);
+    
+    if (chamado.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: "Chamado não encontrado"
+      });
+    }
+
+    // Verifica se o chamado já foi aceito
+    if (chamado[0].status !== "aberto") {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: "Apenas chamados abertos podem ser aceitos"
+      });
+    }
+
+    // Atualiza o status para em_atendimento e atribui o técnico
+    await db.Update("chamados", { status: "em_atendimento", tecnico_id }, `id = ${id}`);
+
+    // Atualiza o equipamento para em_manutencao
+    await db.Update("equipamentos", { status: "em_manutencao" }, `id = ${chamado[0].equipamento_id}`);
+
+    return res.status(200).json({
+      sucesso: true,
+      mensagem: "Chamado aceito com sucesso",
+      dados: { id, status: "em_atendimento", tecnico_id }
+    });
+  } catch (e) {
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: "Erro ao aceitar o chamado",
+      erro: e.message
+    });
+  }
+};
+
+module.exports = { listar, buscarPorId, criar, atualizarStatus, aceitar };
