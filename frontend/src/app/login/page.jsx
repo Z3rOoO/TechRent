@@ -32,8 +32,7 @@ export default function LoginPage() {
         // Redirecionamento por tipo de usuário
         const nivel = data.dados.nivel_acesso;
         if (nivel === "admin") router.push("/dashboard");
-        else if (nivel === "tecnico") router.push("/chamados-tecnico");
-        else router.push("/meus-chamados");
+        else router.push("/chamados");
         
         // Pequeno delay para garantir que o router inicie a transição antes do reload
         setTimeout(() => {

@@ -116,7 +116,7 @@ export default function ChamadosPage() {
       {chamadosFiltrados.length === 0 ? (
         <div className="rounded-2xl p-8 md:p-12 text-center" style={{ background: "rgba(13,21,38,0.6)", border: "1px solid rgba(99,130,200,0.1)" }}>
           <p className="text-slate-500 text-sm">
-            {filtroStatus === "todos" ? "Nenhum chamado encontrado." : `Nenhum chamado com status "${filtroStatus.replace("_", " ")}"`.}
+            {filtroStatus === "todos" ? "Nenhum chamado encontrado." : `Nenhum chamado com status "${filtroStatus.replace("_", " ")}".`}
           </p>
           {isCliente && (
             <Link href="/chamados/novo" className="mt-4 inline-block px-4 py-2 rounded-xl text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors">
