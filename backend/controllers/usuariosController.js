@@ -170,4 +170,70 @@ const deletar = async (req, res) => {
   }
 };
 
-module.exports = { listar, buscarPorId, criar, atualizar, deletar };
+// PUT /usuarios/:id/senha - altera a senha do próprio usuário ou admin altera qualquer uma
+const alterarSenha = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { senha_atual, nova_senha } = req.body;
+    const usuario_logado = req.usuario;
+    // Só pode alterar a própria senha (ou admin pode alterar qualquer uma)
+    if (usuario_logado.nivel_acesso !== 'admin' && String(usuario_logado.id) !== String(id)) {
+      return res.status(403).json({ sucesso: false, mensagem: 'Sem permissão para alterar esta senha' });
+    }
+    if (!nova_senha || nova_senha.length < 6) {
+      return res.status(400).json({ sucesso: false, mensagem: 'A nova senha deve ter pelo menos 6 caracteres' });
+    }
+    const usuarios = await db.Read('usuarios', `id = ${id}`);
+    if (usuarios.length === 0) {
+      return res.status(404).json({ sucesso: false, mensagem: 'Usuário não encontrado' });
+    }
+    // Verificar senha atual (exceto admin alterando outra conta)
+    if (String(usuario_logado.id) === String(id)) {
+      const bcrypt = require('bcrypt');
+      const senhaOk = await bcrypt.compare(senha_atual || '', usuarios[0].senha);
+      if (!senhaOk) {
+        return res.status(401).json({ sucesso: false, mensagem: 'Senha atual incorreta' });
+      }
+    }
+    const bcrypt = require('bcrypt');
+    const novaSenhaHash = await bcrypt.hash(nova_senha, 10);
+    await db.Update('usuarios', { senha: novaSenhaHash }, `id = ${id}`);
+    return res.status(200).json({ sucesso: true, mensagem: 'Senha alterada com sucesso' });
+  } catch (e) {
+    return res.status(500).json({ sucesso: false, mensagem: 'Erro ao alterar senha', erro: e.message });
+  }
+};
+
+// PUT /usuarios/:id/perfil - atualiza o próprio perfil (nome e email)
+const atualizarPerfil = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nome, email } = req.body;
+    const usuario_logado = req.usuario;
+    // Só pode atualizar o próprio perfil (ou admin pode atualizar qualquer um)
+    if (usuario_logado.nivel_acesso !== 'admin' && String(usuario_logado.id) !== String(id)) {
+      return res.status(403).json({ sucesso: false, mensagem: 'Sem permissão para atualizar este perfil' });
+    }
+    const usuario = await db.Read('usuarios', `id = ${id}`);
+    if (usuario.length === 0) {
+      return res.status(404).json({ sucesso: false, mensagem: 'Usuário não encontrado' });
+    }
+    const data = {};
+    if (nome) data.nome = nome;
+    if (email) {
+      // Verificar se email já está em uso por outro usuário
+      const emailExiste = await db.Read('usuarios', `email = '${email}' AND id != ${id}`);
+      if (emailExiste.length > 0) {
+        return res.status(400).json({ sucesso: false, mensagem: 'Email já está em uso' });
+      }
+      data.email = email;
+    }
+    await db.Update('usuarios', data, `id = ${id}`);
+    const { senha, ...atualizado } = { ...usuario[0], ...data };
+    return res.status(200).json({ sucesso: true, mensagem: 'Perfil atualizado com sucesso', dados: atualizado });
+  } catch (e) {
+    return res.status(500).json({ sucesso: false, mensagem: 'Erro ao atualizar perfil', erro: e.message });
+  }
+};
+
+module.exports = { listar, buscarPorId, criar, atualizar, deletar, alterarSenha, atualizarPerfil };

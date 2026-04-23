@@ -1,129 +1,119 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+const API = "http://localhost:3001";
 
 export default function ManutencaoPage() {
   const [registros, setRegistros] = useState([]);
-  const [erro, setErro] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     const raw = localStorage.getItem("techrent_user");
-    if (raw) { try { setUser(JSON.parse(raw)); } catch {} }
-    const token = localStorage.getItem("techrent_token");
-    fetch("http://localhost:3001/manutencao", {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.sucesso === false) setErro(data.mensagem || "Erro ao buscar");
-        else {
-          const list = Array.isArray(data) ? data : (Array.isArray(data?.dados) ? data.dados : []);
-          setRegistros(list);
-        }
-      })
-      .catch((e) => setErro(e.message))
-      .finally(() => setLoading(false));
+    if (!raw) { router.push("/login"); return; }
+    const u = JSON.parse(raw);
+    setUser(u);
+    if (u.nivel_acesso === "cliente") { router.push("/chamados"); return; }
+    fetchRegistros();
   }, []);
 
-  const formatDate = (d) => {
-    if (!d) return "—";
-    try { return new Date(d).toLocaleDateString("pt-BR"); } catch { return d; }
+  const fetchRegistros = async () => {
+    try {
+      const token = localStorage.getItem("techrent_token");
+      const res = await fetch(`${API}/manutencao`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.sucesso) setRegistros(data.dados);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-start justify-between gap-4 animate-fade-in">
+    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Historico de Manutencao</h1>
-          <p className="text-sm text-slate-500 mt-1">Registro detalhado de todos os reparos realizados</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Histórico de Manutenção</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            {user?.nivel_acesso === "admin" ? "Todos os registros de manutenção do sistema" : "Seus registros de manutenção"}
+          </p>
         </div>
-        {user?.nivel_acesso === "tecnico" && (
-          <Link href="/manutencao/novo"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
-            style={{background:"linear-gradient(135deg, #2563eb, #3b82f6)"}}>
-            + Registrar
+        <div className="flex gap-3">
+          <Link href="/chamados"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white transition-colors"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(99,130,200,0.15)" }}>
+            Ver Chamados
           </Link>
-        )}
+          <Link href="/manutencao/novo"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5"
+            style={{ background: "linear-gradient(135deg, #059669, #10b981)" }}>
+            + Novo Registro
+          </Link>
+        </div>
       </div>
 
-      {erro && (
-        <div className="p-4 rounded-xl text-sm text-red-400" style={{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)"}}>
-          Erro: {erro}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 space-y-4">
-          <svg className="w-8 h-8 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-          </svg>
-          <p className="text-slate-500 text-sm">Carregando registros...</p>
-        </div>
-      ) : registros.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 space-y-3 animate-fade-in">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-            style={{background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.15)"}}>
-            <svg className="w-8 h-8 text-blue-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-              <circle cx="12" cy="12" r="3" strokeWidth="1.5"/>
-            </svg>
-          </div>
-          <p className="text-slate-400 font-medium">Nenhum registro encontrado</p>
-          <p className="text-slate-600 text-sm">Nenhuma manutencao foi registrada ainda</p>
+      {registros.length === 0 ? (
+        <div className="rounded-2xl p-12 text-center" style={{ background: "rgba(13,21,38,0.6)", border: "1px solid rgba(99,130,200,0.1)" }}>
+          <p className="text-slate-500 text-sm">Nenhum registro de manutenção encontrado.</p>
+          <p className="text-slate-600 text-xs mt-2">Os registros aparecem quando um técnico documenta uma ação em um chamado.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {registros.map((r, index) => {
-            const dataManutencao = formatDate(r.data_manutencao || r.data);
-            return (
-              <Link key={r.id || index} href={`/manutencao/${r.id}`}
-                className="block rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl animate-slide-in-from-bottom group"
-                style={{animationDelay:`${index*0.04}s`,background:"rgba(13,21,38,0.7)",border:"1px solid rgba(99,130,200,0.1)"}}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor="rgba(59,130,246,0.25)"}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor="rgba(99,130,200,0.1)"}>
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <h3 className="font-semibold text-slate-200 group-hover:text-blue-400 transition-colors">Reparo #{r.id}</h3>
-                    {dataManutencao !== "—" && <p className="text-xs text-slate-600 mt-0.5">Realizado em {dataManutencao}</p>}
+          {registros.map(r => (
+            <div key={r.id} className="rounded-2xl p-5" style={{ background: "rgba(13,21,38,0.7)", border: "1px solid rgba(99,130,200,0.1)" }}>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-2 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-mono text-slate-600">#{r.id}</span>
+                    <span className="text-sm font-semibold text-slate-200">{r.equipamento_nome}</span>
+                    {r.equipamento_patrimonio && (
+                      <span className="text-xs font-mono text-slate-600">{r.equipamento_patrimonio}</span>
+                    )}
+                    {r.equipamento_categoria && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium text-slate-400 bg-slate-700/50">{r.equipamento_categoria}</span>
+                    )}
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-medium"
-                    style={{background:"rgba(34,197,94,0.12)",color:"#4ade80",border:"1px solid rgba(34,197,94,0.25)"}}>
-                    Concluido
-                  </span>
+                  <p className="text-sm text-slate-300 leading-relaxed">{r.descricao}</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-xs text-blue-400 font-medium">Técnico: {r.tecnico_nome}</span>
+                    {r.chamado_titulo && (
+                      <Link href={`/chamados/${r.chamado_id}`}
+                        className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                        Chamado: {r.chamado_titulo}
+                        {r.chamado_status && (
+                          <span className={`ml-1 ${r.chamado_status === "resolvido" ? "text-emerald-400" : "text-amber-400"}`}>
+                            ({r.chamado_status.replace("_", " ")})
+                          </span>
+                        )}
+                      </Link>
+                    )}
+                  </div>
                 </div>
-                {r.descricao && <p className="text-sm text-slate-500 line-clamp-2 mb-3">{r.descricao}</p>}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                  {r.equipamento && (
-                    <div>
-                      <p className="text-slate-600 uppercase tracking-wide mb-1">Equipamento</p>
-                      <p className="font-medium text-slate-300">{r.equipamento}</p>
-                    </div>
-                  )}
-                  {dataManutencao !== "—" && (
-                    <div>
-                      <p className="text-slate-600 uppercase tracking-wide mb-1">Data</p>
-                      <p className="font-medium text-slate-300">{dataManutencao}</p>
-                    </div>
-                  )}
-                  {r.tecnico && (
-                    <div>
-                      <p className="text-slate-600 uppercase tracking-wide mb-1">Tecnico</p>
-                      <p className="font-medium text-slate-300">{r.tecnico}</p>
-                    </div>
-                  )}
-                  {r.custo && (
-                    <div>
-                      <p className="text-slate-600 uppercase tracking-wide mb-1">Custo</p>
-                      <p className="font-medium text-green-400">R$ {(parseFloat(r.custo)||0).toFixed(2)}</p>
-                    </div>
-                  )}
+                <div className="shrink-0">
+                  <p className="text-xs text-slate-500 text-right">
+                    {new Date(r.registrado_em).toLocaleString("pt-BR", {
+                      day: "2-digit", month: "2-digit", year: "numeric",
+                      hour: "2-digit", minute: "2-digit"
+                    })}
+                  </p>
                 </div>
-              </Link>
-            );
-          })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

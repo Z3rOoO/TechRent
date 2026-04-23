@@ -3,16 +3,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const STATUS_STYLES = {
-  disponivel: { color:"#4ade80", bg:"rgba(34,197,94,0.1)", border:"rgba(34,197,94,0.2)" },
-  alugado: { color:"#93c5fd", bg:"rgba(59,130,246,0.1)", border:"rgba(59,130,246,0.2)" },
-  manutencao: { color:"#c4b5fd", bg:"rgba(139,92,246,0.1)", border:"rgba(139,92,246,0.2)" },
+  operacional: { label: "Operacional", color:"#4ade80", bg:"rgba(34,197,94,0.1)", border:"rgba(34,197,94,0.2)" },
+  em_manutencao: { label: "Em Manutenção", color:"#fbbf24", bg:"rgba(251,191,36,0.1)", border:"rgba(251,191,36,0.2)" },
+  desativado: { label: "Desativado", color:"#94a3b8", bg:"rgba(100,116,139,0.1)", border:"rgba(100,116,139,0.2)" },
 };
 function StatusBadge({ status }) {
-  const s = STATUS_STYLES[status?.toLowerCase()] || { color:"#94a3b8", bg:"rgba(100,116,139,0.1)", border:"rgba(100,116,139,0.2)" };
+  const s = STATUS_STYLES[status] || { label: status || "—", color:"#94a3b8", bg:"rgba(100,116,139,0.1)", border:"rgba(100,116,139,0.2)" };
   return (
-    <span className="px-2.5 py-1 rounded-full text-xs font-medium capitalize"
+    <span className="px-2.5 py-1 rounded-full text-xs font-medium"
       style={{background:s.bg,color:s.color,border:`1px solid ${s.border}`}}>
-      {status||"—"}
+      {s.label}
     </span>
   );
 }
@@ -43,10 +43,10 @@ export default function EquipamentosPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const statuses = ["disponivel","alugado","manutencao"];
-  const filteredEquipamentos = filter === "todos" ? equipamentos : equipamentos.filter((e) => e.status?.toLowerCase() === filter);
+  const statuses = ["operacional","em_manutencao","desativado"];
+  const filteredEquipamentos = filter === "todos" ? equipamentos : equipamentos.filter((e) => e.status === filter);
   const counts = statuses.reduce((acc, s) => {
-    acc[s] = equipamentos.filter((e) => e.status?.toLowerCase() === s).length;
+    acc[s] = equipamentos.filter((e) => e.status === s).length;
     return acc;
   }, {});
 
@@ -73,9 +73,9 @@ export default function EquipamentosPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-slide-in-from-bottom" style={{animationDelay:"0.05s"}}>
         {[
           {key:"todos",label:"Total",value:equipamentos.length,color:"#94a3b8"},
-          {key:"disponivel",label:"Disponíveis",value:counts.disponivel||0,color:"#4ade80"},
-          {key:"alugado",label:"Alugados",value:counts.alugado||0,color:"#93c5fd"},
-          {key:"manutencao",label:"Manutenção",value:counts.manutencao||0,color:"#c4b5fd"},
+          {key:"operacional",label:"Operacionais",value:counts.operacional||0,color:"#4ade80"},
+          {key:"em_manutencao",label:"Em Manutenção",value:counts.em_manutencao||0,color:"#fbbf24"},
+          {key:"desativado",label:"Desativados",value:counts.desativado||0,color:"#94a3b8"},
         ].map((s) => (
           <button key={s.key} onClick={() => setFilter(s.key)}
             className="rounded-xl p-4 text-left transition-all duration-200 hover:-translate-y-0.5"
@@ -122,34 +122,22 @@ export default function EquipamentosPage() {
               onMouseLeave={(e2) => e2.currentTarget.style.borderColor="rgba(99,130,200,0.1)"}>
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
-                  <h3 className="font-semibold text-slate-200 group-hover:text-blue-400 transition-colors">{e.nome||e.modelo||"Equipamento"}</h3>
-                  {e.tipo && <p className="text-xs text-slate-500 mt-0.5">{e.tipo}</p>}
+                  <h3 className="font-semibold text-slate-200 group-hover:text-blue-400 transition-colors">{e.nome||"Equipamento"}</h3>
+                  {e.categoria && <p className="text-xs text-slate-500 mt-0.5">{e.categoria}</p>}
                 </div>
                 <StatusBadge status={e.status} />
               </div>
               <div className="grid grid-cols-2 gap-3 text-xs">
-                {e.marca && (
+                {e.patrimonio && (
                   <div>
-                    <p className="text-slate-600 uppercase tracking-wide mb-0.5">Marca</p>
-                    <p className="text-slate-300 font-medium">{e.marca}</p>
+                    <p className="text-slate-600 uppercase tracking-wide mb-0.5">Patrimônio</p>
+                    <p className="text-slate-300 font-medium font-mono">{e.patrimonio}</p>
                   </div>
                 )}
-                {e.numero_serie && (
-                  <div>
-                    <p className="text-slate-600 uppercase tracking-wide mb-0.5">Série</p>
-                    <p className="text-slate-300 font-medium font-mono">{e.numero_serie}</p>
-                  </div>
-                )}
-                {e.localizacao && (
-                  <div>
-                    <p className="text-slate-600 uppercase tracking-wide mb-0.5">Localização</p>
-                    <p className="text-slate-300 font-medium">{e.localizacao}</p>
-                  </div>
-                )}
-                {e.valor_diaria && (
-                  <div>
-                    <p className="text-slate-600 uppercase tracking-wide mb-0.5">Diária</p>
-                    <p className="text-green-400 font-bold">R$ {(parseFloat(e.valor_diaria)||0).toFixed(2)}</p>
+                {e.descricao && (
+                  <div className="col-span-2">
+                    <p className="text-slate-600 uppercase tracking-wide mb-0.5">Descrição</p>
+                    <p className="text-slate-400 line-clamp-2">{e.descricao}</p>
                   </div>
                 )}
               </div>

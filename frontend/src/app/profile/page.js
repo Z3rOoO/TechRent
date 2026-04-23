@@ -29,7 +29,7 @@ export default function ProfilePage() {
     setErro(null);
     const token = localStorage.getItem("techrent_token");
     try {
-      const res = await fetch(`http://localhost:3001/usuarios/${user.id}`, {
+      const res = await fetch(`http://localhost:3001/usuarios/${user.id}/perfil`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),
@@ -58,7 +58,7 @@ export default function ProfilePage() {
     admin: { label: "Administrador", color: "#fbbf24", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.2)", letter: "A" },
   };
 
-  const backHref = user?.nivel_acesso === "admin" ? "/dashboard" : user?.nivel_acesso === "tecnico" ? "/chamados-tecnico" : "/meus-chamados";
+  const backHref = user?.nivel_acesso === "admin" ? "/dashboard" : "/chamados";
 
   if (loading) {
     return (
@@ -184,10 +184,10 @@ export default function ProfilePage() {
         background: "rgba(13,21,38,0.7)", border: "1px solid rgba(99,130,200,0.12)" }}>
         <h2 className="font-semibold text-slate-200 mb-4">Acesso Rápido</h2>
         {user?.nivel_acesso === "cliente" && (
-          <QuickLink href="/meus-chamados" label="Meus Chamados" desc="Ver e gerenciar seus chamados" />
+          <QuickLink href="/chamados" label="Meus Chamados" desc="Ver e gerenciar seus chamados" />
         )}
         {user?.nivel_acesso === "tecnico" && (
-          <QuickLink href="/chamados-tecnico" label="Painel do Técnico" desc="Ver chamados disponíveis e em andamento" />
+          <QuickLink href="/chamados" label="Painel do Técnico" desc="Ver chamados disponíveis e em andamento" />
         )}
         {user?.nivel_acesso === "admin" && (
           <QuickLink href="/dashboard" label="Dashboard Admin" desc="Painel de controle completo" />

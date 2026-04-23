@@ -17,6 +17,8 @@ export default function NovoEquipamentoPage() {
 
   const [formData, setFormData] = useState({
     nome: "",
+    categoria: "",
+    patrimonio: "",
     descricao: "",
     status: "operacional",
   });
@@ -136,6 +138,19 @@ export default function NovoEquipamentoPage() {
                 />
               </div>
 
+              {/* Categoria e Patrimônio */}
+              <div className="grid grid-cols-2 gap-4 animate-slide-in-from-bottom" style={{ animationDelay: "0.15s" }}>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-300">Categoria</label>
+                  <Input type="text" name="categoria" placeholder="Ex: Notebook" value={formData.categoria} onChange={handleChange}
+                    className="bg-slate-800 border-slate-600 text-slate-100 placeholder-slate-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-300">Patrimônio</label>
+                  <Input type="text" name="patrimonio" placeholder="Ex: PAT-001" value={formData.patrimonio} onChange={handleChange}
+                    className="bg-slate-800 border-slate-600 text-slate-100 placeholder-slate-500 font-mono" />
+                </div>
+              </div>
               {/* Descrição */}
               <div className="space-y-2 animate-slide-in-from-bottom" style={{ animationDelay: "0.2s" }}>
                 <label className="block text-sm font-medium text-slate-300">

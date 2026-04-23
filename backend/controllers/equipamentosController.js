@@ -6,10 +6,15 @@ const db = require('../config/database');
 // GET /equipamentos - lista todos os equipamentos
 const listar = async (req, res) => {
   try {
-    const equipamentos = await db.Read("equipamentos");
+    const { status } = req.query;
+    let where = null;
+    if (status) {
+      where = `status = '${status}'`;
+    }
+    const equipamentos = await db.Read("equipamentos", where);
     return res.status(200).json({
       sucesso: true,
-      mensagem: "Equipamentos recuperados com sucesso",
+      mensagem: "Equipamentos listados com sucesso",
       dados: equipamentos
     });
   } catch (e) {
@@ -26,11 +31,10 @@ const buscarPorId = async (req, res) => {
   try {
     const { id } = req.params;
     const equipamentos = await db.Read("equipamentos", `id = ${id}`);
-    
+
     if (equipamentos.length === 0) {
       return res.status(404).json({ sucesso: false, mensagem: "Equipamento não encontrado" });
     }
-
     return res.status(200).json({
       sucesso: true,
       mensagem: "Equipamento recuperado com sucesso",
@@ -48,14 +52,22 @@ const buscarPorId = async (req, res) => {
 // POST /equipamentos - criar (admin only)
 const criar = async (req, res) => {
   try {
-    const data = req.body;
-    if (!data.status) data.status = "disponivel";
-    
+    const { nome, categoria, patrimonio, descricao, status } = req.body;
+
+    if (!nome) {
+      return res.status(400).json({ sucesso: false, mensagem: "Nome do equipamento é obrigatório" });
+    }
+
+    const statusValidos = ['operacional', 'em_manutencao', 'desativado'];
+    const statusFinal = statusValidos.includes(status) ? status : 'operacional';
+
+    const data = { nome, categoria, patrimonio, descricao, status: statusFinal };
     const result = await db.Create("equipamentos", data);
+
     return res.status(201).json({
       sucesso: true,
       mensagem: "Equipamento criado com sucesso",
-      dados: { id: result.insertId, ...data }
+      dados: { id: result, ...data }
     });
   } catch (e) {
     return res.status(500).json({
@@ -70,18 +82,31 @@ const criar = async (req, res) => {
 const atualizar = async (req, res) => {
   try {
     const { id } = req.params;
-    const data = req.body;
-    
+    const { nome, categoria, patrimonio, descricao, status } = req.body;
+
     const existe = await db.Read("equipamentos", `id = ${id}`);
     if (existe.length === 0) {
       return res.status(404).json({ sucesso: false, mensagem: "Equipamento não encontrado" });
+    }
+
+    const data = {};
+    if (nome !== undefined) data.nome = nome;
+    if (categoria !== undefined) data.categoria = categoria;
+    if (patrimonio !== undefined) data.patrimonio = patrimonio;
+    if (descricao !== undefined) data.descricao = descricao;
+    if (status !== undefined) {
+      const statusValidos = ['operacional', 'em_manutencao', 'desativado'];
+      if (!statusValidos.includes(status)) {
+        return res.status(400).json({ sucesso: false, mensagem: "Status inválido. Use: operacional, em_manutencao ou desativado" });
+      }
+      data.status = status;
     }
 
     await db.Update("equipamentos", data, `id = ${id}`);
     return res.status(200).json({
       sucesso: true,
       mensagem: "Equipamento atualizado com sucesso",
-      dados: { id, ...data }
+      dados: { id: parseInt(id), ...existe[0], ...data }
     });
   } catch (e) {
     return res.status(500).json({
@@ -96,7 +121,7 @@ const atualizar = async (req, res) => {
 const remover = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const existe = await db.Read("equipamentos", `id = ${id}`);
     if (existe.length === 0) {
       return res.status(404).json({ sucesso: false, mensagem: "Equipamento não encontrado" });

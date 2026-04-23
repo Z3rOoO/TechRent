@@ -23,7 +23,8 @@ export default function NovoChamadoPage() {
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data) ? data : (Array.isArray(data?.dados) ? data.dados : []);
-        setEquipamentos(list);
+        // Mostrar apenas equipamentos operacionais para abertura de chamado
+        setEquipamentos(list.filter(e => e.status === 'operacional' || !e.status));
       })
       .catch(() => {});
   }, [router]);
@@ -43,9 +44,7 @@ export default function NovoChamadoPage() {
       if (res.ok) {
         setSuccess(true);
         setTimeout(() => {
-          const role = user?.nivel_acesso;
-          if (role === "cliente") router.push("/meus-chamados");
-          else router.push("/chamados");
+          router.push("/chamados");
         }, 1500);
       } else {
         setError(data.mensagem || "Erro ao criar chamado");
@@ -54,7 +53,7 @@ export default function NovoChamadoPage() {
     finally { setLoading(false); }
   };
 
-  const backHref = user?.nivel_acesso === "cliente" ? "/meus-chamados" : "/chamados";
+  const backHref = "/chamados";
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
@@ -122,7 +121,7 @@ export default function NovoChamadoPage() {
                   style={{background:"rgba(13,21,38,0.9)",border:"1px solid rgba(99,130,200,0.15)",outline:"none"}}>
                   <option value="">Selecionar...</option>
                   {equipamentos.map((eq) => (
-                    <option key={eq.id} value={eq.id}>{eq.nome||eq.modelo||`Equip. #${eq.id}`}</option>
+                    <option key={eq.id} value={eq.id}>{eq.nome||`Equip. #${eq.id}`}{eq.patrimonio ? ` (${eq.patrimonio})` : ''}</option>
                   ))}
                 </select>
               </div>

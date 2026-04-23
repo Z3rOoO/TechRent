@@ -22,4 +22,10 @@ router.put('/:id', autenticar, autorizar('admin'), ctrl.atualizar);
 // Deletar usuário (admin only)
 router.delete('/:id', autenticar, autorizar('admin'), ctrl.deletar);
 
+// Alterar senha (próprio usuário ou admin)
+router.put('/:id/senha', autenticar, ctrl.alterarSenha);
+
+// Atualizar próprio perfil (qualquer usuário autenticado pode atualizar o próprio)
+router.put('/:id/perfil', autenticar, ctrl.atualizarPerfil);
+
 module.exports = router;

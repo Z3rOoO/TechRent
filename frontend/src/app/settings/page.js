@@ -53,7 +53,7 @@ export default function SettingsPage() {
     finally { setSaving(false); }
   };
 
-  const backHref = user?.nivel_acesso === "admin" ? "/dashboard" : user?.nivel_acesso === "tecnico" ? "/chamados-tecnico" : "/meus-chamados";
+  const backHref = user?.nivel_acesso === "admin" ? "/dashboard" : "/chamados";
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
