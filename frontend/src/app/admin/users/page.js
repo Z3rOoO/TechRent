@@ -13,7 +13,7 @@ import Modal from "../../../components/ui/Modal";
 export default function AdminUsersPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [usuarios, setUsuarios] = useState(null);
+  const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -50,7 +50,7 @@ export default function AdminUsersPage() {
     })
       .then((r) => r.json())
       .then((data) => {
-        setUsuarios(data.dados || data || []);
+        const listU2 = Array.isArray(data) ? data : (Array.isArray(data?.dados) ? data.dados : []); setUsuarios(listU2);
       })
       .catch((e) => {
         setError(e.message);
@@ -133,7 +133,7 @@ export default function AdminUsersPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const newData = await response.json();
-        setUsuarios(newData.dados || newData || []);
+        const listU3 = Array.isArray(newData) ? newData : (Array.isArray(newData?.dados) ? newData.dados : []); setUsuarios(listU3);
         setTimeout(() => setSuccess(null), 3000);
       } else {
         setError(data.mensagem || "Erro ao salvar usuário");

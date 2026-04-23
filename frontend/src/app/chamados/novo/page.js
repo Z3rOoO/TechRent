@@ -1,12 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Container from "../../../components/ui/Container";
-import Card, { CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
-import Button from "../../../components/ui/Button";
-import Input from "../../../components/ui/Input";
-import Alert from "../../../components/ui/Alert";
-import Spinner from "../../../components/ui/Spinner";
+import Link from "next/link";
 
 export default function NovoChamadoPage() {
   const router = useRouter();
@@ -15,219 +10,157 @@ export default function NovoChamadoPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [equipamentos, setEquipamentos] = useState([]);
-  const [loadingEquipamentos, setLoadingEquipamentos] = useState(true);
-
-  const [formData, setFormData] = useState({
-    titulo: "",
-    descricao: "",
-    equipamento_id: "",
-    prioridade: "media",
-  });
+  const [formData, setFormData] = useState({ titulo:"", descricao:"", equipamento_id:"", prioridade:"media" });
 
   useEffect(() => {
-    // Verificar autenticação
     const raw = localStorage.getItem("techrent_user");
     const token = localStorage.getItem("techrent_token");
-
-    if (!raw || !token) {
-      router.push("/login");
-      return;
-    }
-
-    setUser(JSON.parse(raw));
-
-    // Buscar equipamentos
+    if (!raw || !token) { router.push("/login"); return; }
+    try { setUser(JSON.parse(raw)); } catch {}
     fetch("http://localhost:3001/equipamentos", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
       .then((data) => {
-        setEquipamentos(data.dados || data || []);
+        const list = Array.isArray(data) ? data : (Array.isArray(data?.dados) ? data.dados : []);
+        setEquipamentos(list);
       })
-      .catch((e) => console.error(e))
-      .finally(() => setLoadingEquipamentos(false));
+      .catch(() => {});
   }, [router]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     const token = localStorage.getItem("techrent_token");
-
     try {
-      const response = await fetch("http://localhost:3001/chamados", {
+      const res = await fetch("http://localhost:3001/chamados", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),
       });
-
-      const data = await response.json();
-
-      if (data.sucesso === false) {
-        setError(data.mensagem || "Erro ao criar chamado");
-      } else {
+      const data = await res.json();
+      if (res.ok) {
         setSuccess(true);
         setTimeout(() => {
-          router.push("/chamados");
-        }, 2000);
+          const role = user?.nivel_acesso;
+          if (role === "cliente") router.push("/meus-chamados");
+          else router.push("/chamados");
+        }, 1500);
+      } else {
+        setError(data.mensagem || "Erro ao criar chamado");
       }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch { setError("Erro de conexão"); }
+    finally { setLoading(false); }
   };
 
-  if (!user) {
-    return (
-      <Container>
-        <div className="flex items-center justify-center min-h-screen">
-          <Spinner />
-        </div>
-      </Container>
-    );
-  }
+  const backHref = user?.nivel_acesso === "cliente" ? "/meus-chamados" : "/chamados";
 
   return (
-    <Container>
-      <div className="max-w-2xl mx-auto space-y-8 py-8 animate-fade-in">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-slate-100">Criar Novo Chamado</h1>
-          <p className="text-slate-400">Descreva seu problema para que nossa equipe possa ajudar</p>
+    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+      <div className="flex items-center gap-2 text-sm text-slate-600 animate-fade-in">
+        <Link href={backHref} className="hover:text-slate-400 transition-colors">Chamados</Link>
+        <span>/</span>
+        <span className="text-slate-400">Novo Chamado</span>
+      </div>
+
+      <div className="animate-fade-in">
+        <h1 className="text-2xl font-bold text-slate-100">Abrir Novo Chamado</h1>
+        <p className="text-sm text-slate-500 mt-1">Descreva o problema para que nossa equipe possa ajudar</p>
+      </div>
+
+      {success && (
+        <div className="flex items-center gap-3 p-4 rounded-xl text-sm text-green-400 animate-scale-in"
+          style={{background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.2)"}}>
+          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Chamado criado com sucesso! Redirecionando...
         </div>
+      )}
 
-        {error && (
-          <Alert variant="destructive">
-            <p className="flex items-center gap-2">
-              <span>!</span> {error}
-            </p>
-          </Alert>
-        )}
+      <div className="rounded-2xl p-8 space-y-6 animate-slide-in-from-bottom"
+        style={{background:"rgba(13,21,38,0.8)",border:"1px solid rgba(99,130,200,0.15)"}}>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-300">Título do Chamado <span className="text-red-400">*</span></label>
+            <input type="text" placeholder="Ex: Computador não liga" value={formData.titulo}
+              onChange={(e) => setFormData({...formData, titulo:e.target.value})} required
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-200 placeholder-slate-600"
+              style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(99,130,200,0.15)",outline:"none"}}
+              onFocus={(e) => e.target.style.borderColor="rgba(59,130,246,0.5)"}
+              onBlur={(e) => e.target.style.borderColor="rgba(99,130,200,0.15)"} />
+          </div>
 
-        {success && (
-          <Alert variant="success">
-            <p className="flex items-center gap-2">
-              <span>✓</span> Chamado criado com sucesso! Redirecionando...
-            </p>
-          </Alert>
-        )}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-300">Descrição <span className="text-red-400">*</span></label>
+            <textarea placeholder="Descreva o problema detalhadamente..." value={formData.descricao}
+              onChange={(e) => setFormData({...formData, descricao:e.target.value})} required rows={4}
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-200 placeholder-slate-600 resize-none"
+              style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(99,130,200,0.15)",outline:"none"}}
+              onFocus={(e) => e.target.style.borderColor="rgba(59,130,246,0.5)"}
+              onBlur={(e) => e.target.style.borderColor="rgba(99,130,200,0.15)"} />
+          </div>
 
-        <Card className="border-slate-700/50 glass-dark">
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Título */}
-              <div className="space-y-2 animate-slide-in-from-bottom" style={{ animationDelay: "0.1s" }}>
-                <label className="block text-sm font-medium text-slate-300">
-                  Título do Chamado
-                </label>
-                <Input
-                  type="text"
-                  name="titulo"
-                  placeholder="Ex: Computador não liga"
-                  value={formData.titulo}
-                  onChange={handleChange}
-                  required
-                  className="bg-slate-800 border-slate-600 text-slate-100 placeholder-slate-500"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-300">Prioridade</label>
+              <select value={formData.prioridade} onChange={(e) => setFormData({...formData, prioridade:e.target.value})}
+                className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-200"
+                style={{background:"rgba(13,21,38,0.9)",border:"1px solid rgba(99,130,200,0.15)",outline:"none"}}>
+                <option value="baixa">Baixa</option>
+                <option value="media">Média</option>
+                <option value="alta">Alta</option>
+              </select>
+            </div>
 
-              {/* Equipamento */}
-              <div className="space-y-2 animate-slide-in-from-bottom" style={{ animationDelay: "0.2s" }}>
-                <label className="block text-sm font-medium text-slate-300">
-                  Equipamento (opcional)
-                </label>
-                {loadingEquipamentos ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Spinner size="sm" />
-                  </div>
-                ) : (
-                  <select
-                    name="equipamento_id"
-                    value={formData.equipamento_id}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                  >
-                    <option value="">Selecione um equipamento</option>
-                    {equipamentos.map((eq) => (
-                      <option key={eq.id} value={eq.id}>
-                        {eq.nome} - {eq.tipo}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {/* Prioridade */}
-              <div className="space-y-2 animate-slide-in-from-bottom" style={{ animationDelay: "0.3s" }}>
-                <label className="block text-sm font-medium text-slate-300">
-                  Prioridade
-                </label>
-                <select
-                  name="prioridade"
-                  value={formData.prioridade}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                >
-                  <option value="baixa">Baixa</option>
-                  <option value="media">Média</option>
-                  <option value="alta">Alta</option>
+            {equipamentos.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-300">Equipamento</label>
+                <select value={formData.equipamento_id} onChange={(e) => setFormData({...formData, equipamento_id:e.target.value})}
+                  className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-200"
+                  style={{background:"rgba(13,21,38,0.9)",border:"1px solid rgba(99,130,200,0.15)",outline:"none"}}>
+                  <option value="">Selecionar...</option>
+                  {equipamentos.map((eq) => (
+                    <option key={eq.id} value={eq.id}>{eq.nome||eq.modelo||`Equip. #${eq.id}`}</option>
+                  ))}
                 </select>
               </div>
+            )}
+          </div>
 
-              {/* Descrição */}
-              <div className="space-y-2 animate-slide-in-from-bottom" style={{ animationDelay: "0.4s" }}>
-                <label className="block text-sm font-medium text-slate-300">
-                  Descrição Detalhada
-                </label>
-                <textarea
-                  name="descricao"
-                  placeholder="Descreva seu problema em detalhes..."
-                  value={formData.descricao}
-                  onChange={handleChange}
-                  required
-                  rows={6}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors resize-none"
-                />
-              </div>
+          {error && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-red-400"
+              style={{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)"}}>
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {error}
+            </div>
+          )}
 
-              {/* Buttons */}
-              <div className="flex gap-4 pt-4 animate-slide-in-from-bottom" style={{ animationDelay: "0.5s" }}>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  size="lg"
-                  className="flex-1"
-                >
-                  {loading ? "Criando..." : "Criar Chamado"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  onClick={() => router.back()}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          <div className="flex gap-3 pt-2">
+            <button type="submit" disabled={loading || success}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all duration-200"
+              style={{background:"linear-gradient(135deg, #2563eb, #3b82f6)"}}>
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Criando...
+                </span>
+              ) : "Abrir Chamado"}
+            </button>
+            <Link href={backHref}
+              className="flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors text-center"
+              style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(99,130,200,0.1)"}}>
+              Cancelar
+            </Link>
+          </div>
+        </form>
       </div>
-    </Container>
+    </div>
   );
 }

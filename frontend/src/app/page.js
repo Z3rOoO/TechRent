@@ -1,128 +1,125 @@
+"use client";
 import Link from "next/link";
-import Button from "../components/ui/Button";
-import Container from "../components/ui/Container";
-import Card, { CardHeader, CardTitle, CardContent } from "../components/ui/Card";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function Home() {
-  const features = [
-    {
-      title: "⚙️ Equipamentos",
-      description: "Gerencie todo o seu inventário de TI com rastreamento completo",
-      href: "/equipamentos",
-    },
-    {
-      title: "📋 Chamados",
-      description: "Abra e acompanhe solicitações de suporte em tempo real",
-      href: "/chamados",
-    },
-    {
-      title: "🔧 Manutenção",
-      description: "Registre e consulte histórico detalhado de reparos",
-      href: "/manutencao",
-    },
-    {
-      title: "📊 Dashboard",
-      description: "Visualize métricas, relatórios e análises avançadas",
-      href: "/dashboard",
-    },
-  ];
+export default function HomePage() {
+  const [user, setUser] = useState(null);
+  const [checked, setChecked] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const raw = localStorage.getItem("techrent_user");
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        setUser(u);
+        const role = u.nivel_acesso;
+        if (role === "admin") router.push("/dashboard");
+        else if (role === "tecnico") router.push("/chamados-tecnico");
+        else if (role === "cliente") router.push("/meus-chamados");
+      } catch {}
+    }
+    setChecked(true);
+  }, [router]);
+
+  if (!checked || user) return null;
 
   return (
-    <Container>
-      <div className="space-y-24">
-        {/* Hero Section */}
-        <section className="py-24 text-center space-y-8 animate-fade-in">
-          <div className="space-y-6">
-            <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-gray-50 leading-tight">
-              Gestão de TI
-              <span className="block text-gray-400">Simples e Poderosa</span>
-            </h1>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-light">
-              Centralize chamados, gerencie equipamentos e registre manutenções com TechRent. 
-              A plataforma completa para sua equipe de TI operar com eficiência.
-            </p>
+    <div className="overflow-hidden">
+      <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-24">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div style={{position:"absolute",top:"30%",left:"50%",transform:"translate(-50%,-50%)",width:"800px",height:"800px",background:"radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 65%)",borderRadius:"50%"}} />
+          <div style={{position:"absolute",bottom:"10%",right:"10%",width:"400px",height:"400px",background:"radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 65%)",borderRadius:"50%"}} />
+        </div>
+        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium text-blue-400 mb-4"
+            style={{background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.2)"}}>
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse-subtle" />
+            Plataforma de Gestao de TI
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 animate-slide-in-from-bottom" style={{ animationDelay: "0.2s" }}>
-            <Button asChild size="lg" className="text-base font-semibold h-14">
-              <Link href="/login">Começar Agora →</Link>
-            </Button>
-            <Button variant="outline" asChild size="lg" className="text-base h-14">
-              <Link href="#features">Ver Funcionalidades</Link>
-            </Button>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
+            <span className="text-slate-100">Gestao de TI</span>
+            <br />
+            <span className="gradient-text">Simples e Poderosa</span>
+          </h1>
+          <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            Centralize chamados, gerencie equipamentos e registre manutencoes com TechRent.
+            A plataforma completa para sua equipe de TI operar com eficiencia.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 animate-slide-in-from-bottom" style={{animationDelay:"0.2s"}}>
+            <Link href="/login"
+              className="px-8 py-3.5 rounded-xl text-base font-semibold text-white transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
+              style={{background:"linear-gradient(135deg, #2563eb, #3b82f6)"}}>
+              Comecar Agora
+            </Link>
+            <a href="#features"
+              className="px-8 py-3.5 rounded-xl text-base font-medium text-slate-400 hover:text-slate-200 transition-all duration-200 hover:-translate-y-0.5"
+              style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(99,130,200,0.15)"}}>
+              Ver Funcionalidades
+            </a>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Features Grid */}
-        <section id="features" className="space-y-16">
-          <div className="text-center space-y-4 animate-fade-in">
-            <h2 className="text-5xl font-bold tracking-tight text-gray-100">Funcionalidades Completas</h2>
-            <p className="text-gray-500 text-lg font-light">Tudo que você precisa integrado em uma plataforma</p>
+      <section className="py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 gap-6">
+            {[{value:"100+",label:"Equipamentos Gerenciados"},{value:"500+",label:"Chamados Resolvidos"},{value:"15+",label:"Equipes Ativas"}].map((s,i) => (
+              <div key={s.label} className="text-center animate-slide-in-from-bottom" style={{animationDelay:`${i*0.1}s`}}>
+                <p className="text-4xl md:text-5xl font-bold text-slate-100">{s.value}</p>
+                <p className="text-sm text-slate-600 mt-2">{s.label}</p>
+              </div>
+            ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <Link 
-                key={feature.href} 
-                href={feature.href} 
-                className="group animate-slide-in-from-bottom"
-                style={{ animationDelay: `${0.1 + index * 0.1}s` }}
-              >
-                <Card className="h-full hover:border-gray-600/50 hover:bg-gray-800/60 hover:shadow-lg hover:-translate-y-1 group-hover:scale-105 transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-gray-100 group-hover:text-white transition-colors">
-                      {feature.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-500 text-sm leading-relaxed group-hover:text-gray-400 transition-colors">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
+        </div>
+      </section>
+
+      <section id="features" className="py-24 px-4">
+        <div className="max-w-5xl mx-auto space-y-16">
+          <div className="text-center space-y-4 animate-fade-in">
+            <h2 className="text-4xl font-bold text-slate-100">Funcionalidades Completas</h2>
+            <p className="text-slate-500 text-lg">Tudo que voce precisa integrado em uma plataforma</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {[
+              {title:"Gestao de Chamados",desc:"Abra, acompanhe e resolva chamados de suporte com total visibilidade do status em tempo real.",color:"#93c5fd",href:"/chamados"},
+              {title:"Inventario de Equipamentos",desc:"Controle completo do parque tecnologico com status, localizacao e historico de cada ativo.",color:"#c4b5fd",href:"/equipamentos"},
+              {title:"Historico de Manutencao",desc:"Registro detalhado de todos os reparos, custos e tecnicos responsaveis por cada intervencao.",color:"#6ee7b7",href:"/manutencao"},
+              {title:"Dashboard Executivo",desc:"Visao panoramica com metricas, indicadores e relatorios para tomada de decisao estrategica.",color:"#fbbf24",href:"/dashboard"},
+            ].map((f,i) => (
+              <Link key={f.href} href={f.href}
+                className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 animate-slide-in-from-bottom"
+                style={{animationDelay:`${i*0.08}s`,background:"rgba(13,21,38,0.7)",border:"1px solid rgba(99,130,200,0.1)"}}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor="rgba(99,130,200,0.25)"}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor="rgba(99,130,200,0.1)"}>
+                <div className="w-10 h-10 rounded-xl mb-4 flex items-center justify-center"
+                  style={{background:`${f.color}15`,border:`1px solid ${f.color}25`}}>
+                  <span className="text-lg font-bold" style={{color:f.color}}>{f.title[0]}</span>
+                </div>
+                <h3 className="font-semibold text-slate-200 group-hover:text-white transition-colors mb-2">{f.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed group-hover:text-slate-400 transition-colors">{f.desc}</p>
               </Link>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Stats Section */}
-        <section className="py-16 space-y-12 animate-fade-in">
-          <div className="text-center space-y-4">
-            <h2 className="text-4xl font-bold text-gray-100">Confiança de Empresas</h2>
-            <p className="text-gray-500 font-light">Números que falam por si</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { label: "Equipamentos Gerenciados", value: "100+" },
-              { label: "Chamados Resolvidos", value: "500+" },
-              { label: "Equipes Ativas", value: "15+" },
-            ].map((stat, index) => (
-              <Card 
-                key={stat.label} 
-                className="text-center border-gray-700/30 hover:border-gray-600/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-in-from-bottom"
-                style={{ animationDelay: `${0.2 + index * 0.1}s` }}
-              >
-                <CardContent className="pt-12 pb-12">
-                  <div className="text-5xl font-bold text-gray-50 mb-3">{stat.value}</div>
-                  <div className="text-sm text-gray-500 font-light">{stat.label}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="border border-gray-700/40 rounded-xl p-16 text-center space-y-8 bg-gradient-to-br from-gray-900/50 to-gray-800/30 backdrop-blur-sm hover:border-gray-600/50 transition-all duration-300 animate-slide-in-from-bottom">
-          <div className="space-y-4">
-            <h2 className="text-4xl font-bold text-gray-100">Pronto para começar?</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed font-light text-lg">
-              Faça login com sua conta para acessar todos os recursos e gerenciar sua infraestrutura de TI 
-              com segurança, eficiência e elegância.
+      <section className="py-24 px-4">
+        <div className="max-w-3xl mx-auto text-center animate-fade-in">
+          <div className="p-12 rounded-3xl" style={{background:"rgba(13,21,38,0.8)",border:"1px solid rgba(99,130,200,0.15)"}}>
+            <h2 className="text-3xl font-bold text-slate-100 mb-4">Pronto para comecar?</h2>
+            <p className="text-slate-500 mb-8 leading-relaxed">
+              Faca login com sua conta para acessar todos os recursos e gerenciar sua infraestrutura de TI com seguranca e eficiencia.
             </p>
+            <Link href="/login"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold text-white transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
+              style={{background:"linear-gradient(135deg, #2563eb, #3b82f6)"}}>
+              Fazer Login Agora
+            </Link>
           </div>
-          <Button asChild size="lg" className="text-base font-semibold h-14">
-            <Link href="/login">Fazer Login Agora →</Link>
-          </Button>
-        </section>
-      </div>
-    </Container>
+        </div>
+      </section>
+    </div>
   );
 }
