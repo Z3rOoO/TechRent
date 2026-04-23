@@ -71,14 +71,14 @@ export default function ChamadosPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
             {isCliente ? "Meus Chamados" : isTecnico ? "Painel do Técnico" : "Todos os Chamados"}
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-slate-400 text-xs md:text-sm mt-1">
             {isCliente ? "Acompanhe o status dos seus chamados" :
              isTecnico ? "Chamados abertos e em andamento" :
              "Gerencie todos os chamados do sistema"}
@@ -94,17 +94,18 @@ export default function ChamadosPage() {
       </div>
 
       {/* Filtros */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-1 md:gap-2 flex-wrap">
         {["todos", "aberto", "em_atendimento", "resolvido", "cancelado"].map(s => (
           <button key={s} onClick={() => setFiltroStatus(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-2 md:px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               filtroStatus === s
                 ? "bg-blue-600 text-white"
                 : "text-slate-400 hover:text-slate-200"
             }`}
             style={filtroStatus !== s ? { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(99,130,200,0.1)" } : {}}>
-            {s === "todos" ? "Todos" : s.replace("_", " ")}
-            <span className="ml-1.5 text-[10px] opacity-70">
+            <span className="hidden sm:inline">{s === "todos" ? "Todos" : s.replace("_", " ")}</span>
+            <span className="sm:hidden">{s === "todos" ? "T" : s.charAt(0).toUpperCase()}</span>
+            <span className="ml-1 md:ml-1.5 text-[10px] opacity-70">
               ({s === "todos" ? chamados.length : chamados.filter(c => c.status === s).length})
             </span>
           </button>
@@ -113,9 +114,9 @@ export default function ChamadosPage() {
 
       {/* Lista de Chamados */}
       {chamadosFiltrados.length === 0 ? (
-        <div className="rounded-2xl p-12 text-center" style={{ background: "rgba(13,21,38,0.6)", border: "1px solid rgba(99,130,200,0.1)" }}>
+        <div className="rounded-2xl p-8 md:p-12 text-center" style={{ background: "rgba(13,21,38,0.6)", border: "1px solid rgba(99,130,200,0.1)" }}>
           <p className="text-slate-500 text-sm">
-            {filtroStatus === "todos" ? "Nenhum chamado encontrado." : `Nenhum chamado com status "${filtroStatus.replace("_", " ")}".`}
+            {filtroStatus === "todos" ? "Nenhum chamado encontrado." : `Nenhum chamado com status "${filtroStatus.replace("_", " ")}"`.}
           </p>
           {isCliente && (
             <Link href="/chamados/novo" className="mt-4 inline-block px-4 py-2 rounded-xl text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors">
@@ -124,28 +125,28 @@ export default function ChamadosPage() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           {chamadosFiltrados.map(c => (
             <Link key={c.id} href={`/chamados/${c.id}`}
-              className="block rounded-2xl p-5 transition-all hover:-translate-y-0.5 group"
+              className="block rounded-2xl p-4 md:p-5 transition-all hover:-translate-y-0.5 group"
               style={{ background: "rgba(13,21,38,0.7)", border: "1px solid rgba(99,130,200,0.1)" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(99,130,200,0.25)"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(99,130,200,0.1)"}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-start gap-3 min-w-0">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start gap-2 md:gap-3 min-w-0">
                   <span className="text-xs font-mono text-slate-600 mt-0.5 shrink-0">#{c.id}</span>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-slate-200 group-hover:text-white transition-colors truncate">{c.titulo}</p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className="text-xs text-slate-500">{c.equipamento_nome}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-slate-200 group-hover:text-white transition-colors truncate text-sm md:text-base">{c.titulo}</p>
+                    <div className="flex flex-wrap items-center gap-1 md:gap-2 mt-1">
+                      <span className="text-xs text-slate-500 truncate">{c.equipamento_nome}</span>
                       {c.equipamento_patrimonio && (
-                        <span className="text-xs text-slate-600 font-mono">{c.equipamento_patrimonio}</span>
+                        <span className="text-xs text-slate-600 font-mono hidden sm:inline">{c.equipamento_patrimonio}</span>
                       )}
                       {!isCliente && c.cliente_nome && (
-                        <span className="text-xs text-slate-500">· {c.cliente_nome}</span>
+                        <span className="text-xs text-slate-500 hidden md:inline">· {c.cliente_nome}</span>
                       )}
                       {c.tecnico_nome && (
-                        <span className="text-xs text-slate-500">· Técnico: {c.tecnico_nome}</span>
+                        <span className="text-xs text-slate-500 hidden lg:inline">· Técnico: {c.tecnico_nome}</span>
                       )}
                     </div>
                     <p className="text-xs text-slate-600 mt-1">
@@ -153,7 +154,7 @@ export default function ChamadosPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 ml-auto">
                   <PrioridadeBadge prioridade={c.prioridade} />
                   <StatusBadge status={c.status} />
                 </div>

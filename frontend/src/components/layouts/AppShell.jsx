@@ -53,48 +53,103 @@ function Icon({ name, className = "w-5 h-5" }) {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/>
       </svg>
     ),
+    close: (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    ),
   };
   return icons[name] || null;
 }
 
-// --- Sidebar Admin ---
-const adminNavItems = [
-  { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
-  { label: "Chamados", href: "/chamados", icon: "tickets" },
-  { label: "Equipamentos", href: "/equipamentos", icon: "equipment" },
-  { label: "Manutenção", href: "/manutencao", icon: "maintenance" },
-  { label: "Usuários", href: "/admin/users", icon: "users" },
-  { label: "Configurações", href: "/settings", icon: "settings" },
-];
+// --- Navigation Items ---
+const getNavItems = (role) => {
+  const base = [
+    { label: "Chamados", href: "/chamados", icon: "tickets" },
+    { label: "Equipamentos", href: "/equipamentos", icon: "equipment" },
+  ];
+  
+  if (role === "admin") {
+    return [
+      { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
+      ...base,
+      { label: "Manutenção", href: "/manutencao", icon: "maintenance" },
+      { label: "Usuários", href: "/admin/users", icon: "users" },
+      { label: "Configurações", href: "/settings", icon: "settings" },
+    ];
+  }
+  
+  if (role === "tecnico") {
+    return [
+      ...base,
+      { label: "Manutenção", href: "/manutencao", icon: "maintenance" },
+      { label: "Configurações", href: "/settings", icon: "settings" },
+    ];
+  }
+  
+  return [
+    ...base,
+    { label: "Configurações", href: "/settings", icon: "settings" },
+  ];
+};
 
-function AdminSidebar({ pathname, compact }) {
+// --- Sidebar ---
+function Sidebar({ pathname, user, isOpen, onClose }) {
+  const items = getNavItems(user?.nivel_acesso);
+  
   return (
-    <aside
-      className={`hidden md:flex flex-col border-r border-slate-800 bg-slate-950/50 backdrop-blur-xl transition-all duration-300 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto ${compact ? "w-20" : "w-64"}`}
-    >
-      <div className="p-4 space-y-2">
-        {adminNavItems.map((item) => {
-          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
-                active ? "bg-blue-600/10 text-blue-400 border border-blue-600/20" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent"
-              }`}
-            >
-              <Icon name={item.icon} className="w-5 h-5 shrink-0" />
-              {!compact && <span className="text-sm font-medium">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </div>
-    </aside>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden transition-opacity duration-300"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar Content */}
+      <aside
+        className={`fixed md:sticky top-0 left-0 h-screen md:h-[calc(100vh-64px)] md:top-16 bg-slate-950 border-r border-slate-800 z-[70] transition-all duration-300 ease-in-out overflow-y-auto
+          ${isOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0 w-64 md:w-20 lg:w-64"}`}
+      >
+        <div className="p-4 md:hidden flex items-center justify-between border-b border-slate-800 mb-4">
+          <span className="font-bold text-slate-100">Menu</span>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white">
+            <Icon name="close" />
+          </button>
+        </div>
+        
+        <div className="p-4 space-y-2">
+          {items.map((item) => {
+            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => onClose()}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+                  active 
+                    ? "bg-blue-600/10 text-blue-400 border border-blue-600/20" 
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent"
+                }`}
+              >
+                <Icon name={item.icon} className="w-5 h-5 shrink-0" />
+                <span className={`text-sm font-medium md:hidden lg:block`}>{item.label}</span>
+                {/* Tooltip for md:w-20 mode */}
+                <span className="hidden md:group-hover:block lg:hidden absolute left-16 bg-slate-900 border border-slate-800 px-2 py-1 rounded text-xs whitespace-nowrap z-50">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </aside>
+    </>
   );
 }
 
 // --- Navbar ---
-function Navbar({ user, onLogout }) {
+function Navbar({ user, onLogout, onMenuToggle }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -122,10 +177,20 @@ function Navbar({ user, onLogout }) {
 
   return (
     <header className="h-16 sticky top-0 z-50 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-4 md:px-6 flex items-center justify-between">
-      <Link href="/" className="flex items-center gap-2.5 group">
-        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-600/20 transition-transform group-hover:scale-105">T</div>
-        <span className="font-bold text-slate-100 tracking-tight">TechRent</span>
-      </Link>
+      <div className="flex items-center gap-4">
+        {user && (
+          <button 
+            onClick={onMenuToggle}
+            className="p-2 -ml-2 text-slate-400 hover:text-white md:hidden"
+          >
+            <Icon name="menu" />
+          </button>
+        )}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-600/20 transition-transform group-hover:scale-105">T</div>
+          <span className="font-bold text-slate-100 tracking-tight">TechRent</span>
+        </Link>
+      </div>
 
       <div className="flex items-center gap-4">
         {user ? (
@@ -137,8 +202,8 @@ function Navbar({ user, onLogout }) {
               <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white shadow-inner" style={{ background: av.color }}>
                 {av.letter}
               </div>
-              <div className="hidden md:flex flex-col items-start leading-tight">
-                <span className="text-sm font-semibold text-slate-200">{user.nome || "Usuário"}</span>
+              <div className="hidden sm:flex flex-col items-start leading-tight">
+                <span className="text-sm font-semibold text-slate-200 max-w-[120px] truncate">{user.nome || "Usuário"}</span>
                 <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{getRoleLabel(user.nivel_acesso)}</span>
               </div>
               <svg className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${menuOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +247,9 @@ function Navbar({ user, onLogout }) {
 export default function AppShell({ children }) {
   const [user, setUser] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -192,26 +259,39 @@ export default function AppShell({ children }) {
     }
   }, []);
 
-  const isAdmin = user?.nivel_acesso === "admin";
   const isLoginPage = pathname === "/login";
+  const isPublicPage = pathname === "/";
 
   if (!mounted) return <div className="min-h-screen bg-slate-950" />;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 selection:bg-blue-500/30">
-      {!isLoginPage && <Navbar user={user} onLogout={() => setUser(null)} />}
+      {!isLoginPage && (
+        <Navbar 
+          user={user} 
+          onLogout={() => setUser(null)} 
+          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+      )}
       
-      <div className="flex flex-1">
-        {isAdmin && !isLoginPage && <AdminSidebar pathname={pathname} />}
+      <div className="flex flex-1 relative">
+        {user && !isLoginPage && (
+          <Sidebar 
+            pathname={pathname} 
+            user={user} 
+            isOpen={sidebarOpen} 
+            onClose={() => setSidebarOpen(false)} 
+          />
+        )}
         
-        <main className={`flex-1 ${!isLoginPage && isAdmin ? "max-w-[calc(100vw-256px)]" : "w-full"}`}>
+        <main className="flex-1 w-full overflow-x-hidden">
           <div className="min-h-full">
             {children}
           </div>
         </main>
       </div>
 
-      {!isLoginPage && !isAdmin && (
+      {!isLoginPage && (isPublicPage || !user) && (
         <footer className="py-8 border-t border-slate-900 bg-slate-950/50">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <p className="text-sm text-slate-600">&copy; 2026 TechRent. Gerenciamento Inteligente de TI.</p>

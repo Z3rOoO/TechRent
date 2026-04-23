@@ -142,15 +142,15 @@ export default function DashboardPage() {
   }));
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard Administrativo</h1>
-          <p className="text-slate-400 text-sm mt-1">Visão geral do sistema em tempo real</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Dashboard Administrativo</h1>
+          <p className="text-slate-400 text-xs md:text-sm mt-1">Visão geral do sistema em tempo real</p>
         </div>
         <button onClick={fetchDashboard}
-          className="px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:text-white transition-colors"
+          className="px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:text-white transition-colors shrink-0"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(99,130,200,0.15)" }}>
           ↻ Atualizar
         </button>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
       {/* KPI Cards - Chamados */}
       <div>
         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Chamados</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
           <StatCard label="Total" value={chamados.total} sub="todos os chamados" color="#3b82f6" />
           <StatCard label="Abertos" value={chamados.abertos} sub="aguardando técnico" color="#60a5fa" />
           <StatCard label="Em Atendimento" value={chamados.em_atendimento} sub="sendo resolvidos" color="#f59e0b" />
@@ -170,7 +170,7 @@ export default function DashboardPage() {
       {/* KPI Cards - Equipamentos e Usuários */}
       <div>
         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Infraestrutura</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
           <StatCard label="Equipamentos" value={equipamentos.total} sub="no inventário" color="#a78bfa" />
           <StatCard label="Operacionais" value={equipamentos.operacionais} sub="funcionando" color="#34d399" />
           <StatCard label="Em Manutenção" value={equipamentos.em_manutencao} sub="com chamado ativo" color="#fbbf24" />
@@ -179,10 +179,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Gráficos - Linha 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="rounded-2xl p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
-          <h2 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Chamados por Status</h2>
-          <ResponsiveContainer width="100%" height={220}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className="rounded-2xl p-4 md:p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
+          <h2 className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Chamados por Status</h2>
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={chamadosStatusData} cx="50%" cy="50%" outerRadius={75} dataKey="value"
                 label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
@@ -193,9 +193,9 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-2xl p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
-          <h2 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Equipamentos por Status</h2>
-          <ResponsiveContainer width="100%" height={220}>
+        <div className="rounded-2xl p-4 md:p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
+          <h2 className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Equipamentos por Status</h2>
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={equipStatusData} cx="50%" cy="50%" outerRadius={75} dataKey="value"
                 label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
@@ -208,11 +208,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Gráficos - Linha 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="rounded-2xl p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
-          <h2 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Chamados por Prioridade</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={chamadosPrioridadeData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className="rounded-2xl p-4 md:p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
+          <h2 className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Chamados por Prioridade</h2>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={chamadosPrioridadeData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,200,0.1)" />
               <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 12 }} />
               <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} allowDecimals={false} />
@@ -224,15 +224,15 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-2xl p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
-          <h2 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Chamados em Atendimento por Técnico</h2>
+        <div className="rounded-2xl p-4 md:p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
+          <h2 className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Chamados em Atendimento por Técnico</h2>
           {tecnicoData.length === 0 ? (
-            <div className="flex items-center justify-center h-[200px]">
+            <div className="flex items-center justify-center h-[180px]">
               <p className="text-slate-500 text-sm">Nenhum chamado em atendimento</p>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={tecnicoData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={tecnicoData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,200,0.1)" />
                 <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 12 }} />
                 <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} allowDecimals={false} />
@@ -246,10 +246,10 @@ export default function DashboardPage() {
 
       {/* Gráfico de linha: Manutenções por mês */}
       {mesesData.length > 0 && (
-        <div className="rounded-2xl p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
-          <h2 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Registros de Manutenção (Últimos 6 Meses)</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={mesesData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+        <div className="rounded-2xl p-4 md:p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
+          <h2 className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Registros de Manutenção (Últimos 6 Meses)</h2>
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={mesesData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,200,0.1)" />
               <XAxis dataKey="mes" tick={{ fill: "#94a3b8", fontSize: 11 }} />
               <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} allowDecimals={false} />
@@ -261,24 +261,24 @@ export default function DashboardPage() {
       )}
 
       {/* Últimos Chamados */}
-      <div className="rounded-2xl p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-slate-300 uppercase tracking-widest">Últimos Chamados</h2>
+      <div className="rounded-2xl p-4 md:p-6" style={{ background: "rgba(13,21,38,0.8)", border: "1px solid rgba(99,130,200,0.15)" }}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+          <h2 className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-widest">Últimos Chamados</h2>
           <Link href="/chamados" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Ver todos →</Link>
         </div>
         <div className="space-y-2">
           {(chamados.ultimos || []).map(c => (
             <Link key={c.id} href={`/chamados/${c.id}`}
-              className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/50 transition-colors group"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl hover:bg-slate-800/50 transition-colors group"
               style={{ border: "1px solid rgba(99,130,200,0.08)" }}>
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-xs font-mono text-slate-600 shrink-0">#{c.id}</span>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white">{c.titulo}</p>
-                  <p className="text-xs text-slate-500">{c.cliente_nome} · {c.equipamento_nome}</p>
+                  <p className="text-xs text-slate-500 truncate">{c.cliente_nome} · {c.equipamento_nome}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0 ml-4">
+              <div className="flex items-center gap-2 shrink-0">
                 <PrioridadeBadge prioridade={c.prioridade} />
                 <StatusBadge status={c.status} />
               </div>
@@ -288,7 +288,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Links rápidos */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         {[
           { label: "Gerenciar Chamados", href: "/chamados", color: "#3b82f6" },
           { label: "Equipamentos", href: "/equipamentos", color: "#a78bfa" },
@@ -296,7 +296,7 @@ export default function DashboardPage() {
           { label: "Usuários", href: "/admin/users", color: "#f59e0b" },
         ].map(item => (
           <Link key={item.href} href={item.href}
-            className="p-4 rounded-xl text-center text-sm font-semibold transition-all hover:-translate-y-0.5"
+            className="p-3 md:p-4 rounded-xl text-center text-xs md:text-sm font-semibold transition-all hover:-translate-y-0.5"
             style={{ background: `${item.color}15`, border: `1px solid ${item.color}30`, color: item.color }}>
             {item.label}
           </Link>

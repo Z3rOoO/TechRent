@@ -51,15 +51,15 @@ export default function EquipamentosPage() {
   }, {});
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-start justify-between gap-4 animate-fade-in">
+    <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 md:gap-4 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Equipamentos</h1>
-          <p className="text-sm text-slate-500 mt-1">Inventário completo do parque tecnológico</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-100">Equipamentos</h1>
+          <p className="text-xs md:text-sm text-slate-500 mt-1">Inventário completo do parque tecnológico</p>
         </div>
         {user?.nivel_acesso === "admin" && (
           <Link href="/equipamentos/novo"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-white transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 shrink-0"
             style={{background:"linear-gradient(135deg, #2563eb, #3b82f6)"}}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/>
@@ -70,7 +70,7 @@ export default function EquipamentosPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-slide-in-from-bottom" style={{animationDelay:"0.05s"}}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 animate-slide-in-from-bottom" style={{animationDelay:"0.05s"}}>
         {[
           {key:"todos",label:"Total",value:equipamentos.length,color:"#94a3b8"},
           {key:"operacional",label:"Operacionais",value:counts.operacional||0,color:"#4ade80"},
@@ -80,8 +80,8 @@ export default function EquipamentosPage() {
           <button key={s.key} onClick={() => setFilter(s.key)}
             className="rounded-xl p-4 text-left transition-all duration-200 hover:-translate-y-0.5"
             style={{background:filter===s.key?"rgba(59,130,246,0.08)":"rgba(13,21,38,0.6)",border:filter===s.key?"1px solid rgba(59,130,246,0.25)":"1px solid rgba(99,130,200,0.1)"}}>
-            <p className="text-2xl font-bold" style={{color:s.color}}>{s.value}</p>
-            <p className="text-xs text-slate-500 mt-1">{s.label}</p>
+            <p className="text-xl md:text-2xl font-bold" style={{color:s.color}}>{s.value}</p>
+            <p className="text-[10px] md:text-xs text-slate-500 mt-1">{s.label}</p>
           </button>
         ))}
       </div>
@@ -113,31 +113,31 @@ export default function EquipamentosPage() {
           <p className="text-slate-600 text-sm">{filter === "todos" ? "Nenhum equipamento cadastrado" : "Sem equipamentos com este status"}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {filteredEquipamentos.map((e, index) => (
             <Link key={e.id} href={`/equipamentos/${e.id}`}
-              className="block rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl animate-slide-in-from-bottom group"
+              className="block rounded-xl p-4 md:p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl animate-slide-in-from-bottom group"
               style={{animationDelay:`${index*0.04}s`,background:"rgba(13,21,38,0.7)",border:"1px solid rgba(99,130,200,0.1)"}}
               onMouseEnter={(e2) => e2.currentTarget.style.borderColor="rgba(59,130,246,0.25)"}
               onMouseLeave={(e2) => e2.currentTarget.style.borderColor="rgba(99,130,200,0.1)"}>
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div>
-                  <h3 className="font-semibold text-slate-200 group-hover:text-blue-400 transition-colors">{e.nome||"Equipamento"}</h3>
-                  {e.categoria && <p className="text-xs text-slate-500 mt-0.5">{e.categoria}</p>}
+              <div className="flex items-start justify-between gap-2 md:gap-3 mb-3">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-slate-200 group-hover:text-blue-400 transition-colors truncate text-sm md:text-base">{e.nome||"Equipamento"}</h3>
+                  {e.categoria && <p className="text-xs text-slate-500 mt-0.5 truncate">{e.categoria}</p>}
                 </div>
                 <StatusBadge status={e.status} />
               </div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="grid grid-cols-2 gap-2 md:gap-3 text-xs">
                 {e.patrimonio && (
                   <div>
-                    <p className="text-slate-600 uppercase tracking-wide mb-0.5">Patrimônio</p>
-                    <p className="text-slate-300 font-medium font-mono">{e.patrimonio}</p>
+                    <p className="text-slate-600 uppercase tracking-wide mb-0.5 text-[10px]">Patrimônio</p>
+                    <p className="text-slate-300 font-medium font-mono truncate">{e.patrimonio}</p>
                   </div>
                 )}
                 {e.descricao && (
                   <div className="col-span-2">
-                    <p className="text-slate-600 uppercase tracking-wide mb-0.5">Descrição</p>
-                    <p className="text-slate-400 line-clamp-2">{e.descricao}</p>
+                    <p className="text-slate-600 uppercase tracking-wide mb-0.5 text-[10px]">Descrição</p>
+                    <p className="text-slate-400 line-clamp-2 text-xs">{e.descricao}</p>
                   </div>
                 )}
               </div>
