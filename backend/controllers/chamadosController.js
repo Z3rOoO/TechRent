@@ -212,6 +212,26 @@ const atualizarStatus = async (req, res) => {
       return res.status(403).json({ sucesso: false, mensagem: "Você não tem permissão para atualizar este chamado" });
     }
 
+    // Trava: para marcar como resolvido, é obrigatório ter ao menos um registro de manutenção
+    if (status === "resolvido") {
+      const conn = await db.getConnection();
+      let registros;
+      try {
+        [registros] = await conn.query(
+          "SELECT id FROM historico_manutencao WHERE chamado_id = ? LIMIT 1",
+          [id]
+        );
+      } finally {
+        conn.release();
+      }
+      if (registros.length === 0) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: "É obrigatório registrar pelo menos uma manutenção antes de concluir o chamado."
+        });
+      }
+    }
+
     await db.Update("chamados", { status }, `id = ${id}`);
 
     // Atualiza status do equipamento conforme o status do chamado

@@ -35,8 +35,18 @@ export default function NovaManutencaoPage() {
       .then(r => r.json())
       .then(data => {
         const list = data.dados || [];
-        // Técnico vê apenas os seus; admin vê todos em atendimento
-        setChamados(list.filter(c => c.status === "em_atendimento"));
+        // Filtra apenas chamados em atendimento
+        // Para técnico: o backend já retorna apenas chamados abertos ou atribuídos a ele,
+        // então filtramos em_atendimento (que serão apenas os dele)
+        // Para admin: filtra todos em atendimento
+        const emAtendimento = list.filter(c => c.status === "em_atendimento");
+
+        if (userData.nivel_acesso === "tecnico") {
+          // Garante que o técnico veja apenas seus próprios chamados em atendimento
+          setChamados(emAtendimento.filter(c => c.tecnico_id === userData.id));
+        } else {
+          setChamados(emAtendimento);
+        }
       })
       .catch(e => console.error(e))
       .finally(() => setLoadingChamados(false));
@@ -95,6 +105,8 @@ export default function NovaManutencaoPage() {
     );
   }
 
+  const isTecnico = user.nivel_acesso === "tecnico";
+
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
@@ -107,7 +119,11 @@ export default function NovaManutencaoPage() {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Registrar Manutenção</h1>
-          <p className="text-slate-400 text-sm mt-0.5">Documente o serviço realizado em um chamado</p>
+          <p className="text-slate-400 text-sm mt-0.5">
+            {isTecnico
+              ? "Documente o serviço realizado nos seus chamados"
+              : "Documente o serviço realizado em um chamado"}
+          </p>
         </div>
       </div>
 
@@ -132,7 +148,9 @@ export default function NovaManutencaoPage() {
 
           {/* Chamado */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-300">Chamado em Atendimento *</label>
+            <label className="text-sm font-medium text-slate-300">
+              {isTecnico ? "Meu Chamado em Atendimento *" : "Chamado em Atendimento *"}
+            </label>
             <select
               name="chamado_id"
               value={formData.chamado_id}
@@ -142,7 +160,13 @@ export default function NovaManutencaoPage() {
               className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-200 focus:outline-none"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(99,130,200,0.2)" }}>
               <option value="">
-                {loadingChamados ? "Carregando chamados..." : chamados.length === 0 ? "Nenhum chamado em atendimento" : "Selecione um chamado"}
+                {loadingChamados
+                  ? "Carregando chamados..."
+                  : chamados.length === 0
+                    ? isTecnico
+                      ? "Nenhum dos seus chamados está em atendimento"
+                      : "Nenhum chamado em atendimento"
+                    : "Selecione um chamado"}
               </option>
               {chamados.map(c => (
                 <option key={c.id} value={c.id} style={{ background: "#0d1526" }}>
@@ -152,7 +176,9 @@ export default function NovaManutencaoPage() {
             </select>
             {chamados.length === 0 && !loadingChamados && (
               <p className="text-xs text-slate-600">
-                Você precisa aceitar um chamado antes de registrar manutenção.{" "}
+                {isTecnico
+                  ? "Você precisa aceitar um chamado antes de registrar manutenção."
+                  : "Não há chamados em atendimento no momento."}{" "}
                 <Link href="/chamados" className="text-blue-400 hover:underline">Ver chamados →</Link>
               </p>
             )}
@@ -173,24 +199,18 @@ export default function NovaManutencaoPage() {
             </div>
           )}
 
-          {/* Equipamento ID (auto-preenchido) */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-300">ID do Equipamento *</label>
-            <input
-              type="number"
-              name="equipamento_id"
-              placeholder="Preenchido automaticamente ao selecionar o chamado"
-              value={formData.equipamento_id}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-200 placeholder-slate-600 focus:outline-none"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(99,130,200,0.2)" }}
-            />
-          </div>
+          {/* Equipamento ID (auto-preenchido, oculto visualmente mas mantido no form) */}
+          <input
+            type="hidden"
+            name="equipamento_id"
+            value={formData.equipamento_id}
+          />
 
           {/* Descrição */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-300">Descrição da Manutenção *</label>
+            <label className="text-sm font-medium text-slate-300">
+              Descrição da Manutenção <span className="text-red-400">*</span>
+            </label>
             <textarea
               name="descricao"
               placeholder="Descreva detalhadamente os serviços realizados, peças substituídas, diagnóstico..."
@@ -205,7 +225,7 @@ export default function NovaManutencaoPage() {
 
           {/* Botões */}
           <div className="flex gap-3 pt-2">
-            <button type="submit" disabled={loading || success}
+            <button type="submit" disabled={loading || success || chamados.length === 0}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all"
               style={{ background: "linear-gradient(135deg, #059669, #10b981)" }}>
               {loading ? "Registrando..." : "Registrar Manutenção"}

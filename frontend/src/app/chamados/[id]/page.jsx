@@ -161,7 +161,11 @@ export default function ChamadoDetalhePage({ params }) {
   const isMeuChamado = isTecnico && chamado.tecnico_id === user?.id;
   const podeAceitar = isTecnico && chamado.status === "aberto";
   const podeAtualizar = (isTecnico && isMeuChamado) || isAdmin;
-  const podeRegistrarManutencao = (isTecnico && isMeuChamado && chamado.status === "em_atendimento") || isAdmin;
+  const podeRegistrarManutencao = (isTecnico && isMeuChamado && chamado.status === "em_atendimento") || (isAdmin && chamado.status === "em_atendimento");
+
+  // Para o técnico, é obrigatório ter ao menos um registro de manutenção para concluir
+  const temRegistroManutencao = chamado.historico && chamado.historico.length > 0;
+  const tecnicoPodeConcluir = !isTecnico || temRegistroManutencao;
 
   return (
     <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-6 animate-fade-in">
@@ -189,6 +193,22 @@ export default function ChamadoDetalhePage({ params }) {
             : "bg-red-500/10 border border-red-500/20 text-red-400"
         }`}>
           {msg.text}
+        </div>
+      )}
+
+      {/* Aviso obrigatório para técnico sem registro de manutenção */}
+      {isMeuChamado && chamado.status === "em_atendimento" && !temRegistroManutencao && (
+        <div className="px-4 py-3 rounded-xl text-sm flex items-start gap-3"
+          style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
+          <svg className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+          <div>
+            <p className="text-amber-400 font-semibold">Registro de manutenção obrigatório</p>
+            <p className="text-amber-300/70 text-xs mt-0.5">
+              Para concluir este chamado, você precisa registrar pelo menos uma manutenção descrevendo o serviço realizado.
+            </p>
+          </div>
         </div>
       )}
 
@@ -256,10 +276,24 @@ export default function ChamadoDetalhePage({ params }) {
                 </button>
               )}
               {chamado.status === "em_atendimento" && (
-                <button disabled={updating} onClick={() => handleStatusUpdate("resolvido")}
-                  className="flex-1 py-2 rounded-xl text-sm font-semibold text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10 transition-colors disabled:opacity-50">
-                  Marcar como Resolvido
-                </button>
+                <div className="flex-1 flex flex-col gap-1">
+                  <button
+                    disabled={updating || !tecnicoPodeConcluir}
+                    onClick={() => handleStatusUpdate("resolvido")}
+                    title={!tecnicoPodeConcluir ? "Registre ao menos uma manutenção antes de concluir" : ""}
+                    className={`w-full py-2 rounded-xl text-sm font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                      tecnicoPodeConcluir
+                        ? "text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+                        : "text-slate-500 border-slate-600/30 cursor-not-allowed"
+                    }`}>
+                    {updating ? "Atualizando..." : "Marcar como Resolvido"}
+                  </button>
+                  {!tecnicoPodeConcluir && (
+                    <p className="text-[11px] text-amber-400/70 text-center">
+                      ⚠ Registre uma manutenção primeiro para concluir
+                    </p>
+                  )}
+                </div>
               )}
               {isAdmin && (
                 <button disabled={updating} onClick={() => handleStatusUpdate("cancelado")}
@@ -285,30 +319,53 @@ export default function ChamadoDetalhePage({ params }) {
           </h3>
           {podeRegistrarManutencao && (
             <button onClick={() => setShowManutencaoForm(!showManutencaoForm)}
-              className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-              {showManutencaoForm ? "Cancelar" : "+ Registrar"}
+              className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium">
+              {showManutencaoForm ? "Cancelar" : "+ Registrar Manutenção"}
             </button>
           )}
         </div>
 
+        {/* Aviso para técnico: registro obrigatório para concluir */}
+        {isMeuChamado && chamado.status === "em_atendimento" && !temRegistroManutencao && !showManutencaoForm && (
+          <div className="flex items-center justify-between px-4 py-3 rounded-xl"
+            style={{ background: "rgba(59,130,246,0.06)", border: "1px dashed rgba(59,130,246,0.25)" }}>
+            <p className="text-xs text-blue-300/80">
+              Registre o serviço realizado para poder concluir este chamado.
+            </p>
+            <button
+              onClick={() => setShowManutencaoForm(true)}
+              className="ml-4 shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:-translate-y-0.5"
+              style={{ background: "linear-gradient(135deg, #2563eb, #3b82f6)" }}>
+              + Registrar agora
+            </button>
+          </div>
+        )}
+
         {/* Formulário de registro de manutenção */}
         {showManutencaoForm && (
           <form onSubmit={handleRegistrarManutencao} className="space-y-3 p-4 rounded-xl" style={{ background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)" }}>
-            <label className="block text-xs font-medium text-slate-300">Descreva o que foi feito:</label>
+            <label className="block text-xs font-medium text-slate-300">Descreva o que foi feito: <span className="text-red-400">*</span></label>
             <textarea
               value={descricaoManutencao}
               onChange={e => setDescricaoManutencao(e.target.value)}
-              placeholder="Ex: Realizada limpeza de componentes, substituído o HD..."
+              placeholder="Ex: Realizada limpeza de componentes, substituído o HD, atualização de drivers..."
               rows={3}
               required
               className="w-full px-3 py-2 rounded-xl text-sm text-slate-200 placeholder-slate-600 resize-none focus:outline-none"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(99,130,200,0.2)" }}
             />
-            <button type="submit" disabled={savingManutencao}
-              className="w-full py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all"
-              style={{ background: "linear-gradient(135deg, #2563eb, #3b82f6)" }}>
-              {savingManutencao ? "Salvando..." : "Salvar Registro"}
-            </button>
+            <div className="flex gap-2">
+              <button type="submit" disabled={savingManutencao}
+                className="flex-1 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all"
+                style={{ background: "linear-gradient(135deg, #2563eb, #3b82f6)" }}>
+                {savingManutencao ? "Salvando..." : "Salvar Registro"}
+              </button>
+              <button type="button" onClick={() => { setShowManutencaoForm(false); setDescricaoManutencao(""); }}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(99,130,200,0.1)" }}>
+                Cancelar
+              </button>
+            </div>
           </form>
         )}
 
