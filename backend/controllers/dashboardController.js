@@ -1,52 +1,72 @@
 // =============================================
 // CONTROLLER DE DASHBOARD
 // =============================================
-// Usa as VIEWS do banco para retornar dados agregados.
-// TODO (alunos): implementar cada função abaixo.
-
 const db = require('../config/database');
 
-// GET /dashboard/admin - resumo geral de chamados e equipamentos (apenas admin)
-// Usa as views: view_resumo_chamados e view_resumo_equipamentos
+// GET /dashboard/admin - resumo geral (admin only)
 const resumoAdmin = async (req, res) => {
   try {
-    const resumoChamados = await db.Read("view_resumo_chamados")//le os logs do banco
-    const resumoEquipamentos = await db.Read("view_resumo_equipamentos")//le os logs do banco
+    // Busca dados reais das tabelas para o resumo
+    const totalChamados = await db.Read("chamados");
+    const totalEquipamentos = await db.Read("equipamentos");
+    const totalUsuarios = await db.Read("usuarios");
+    const manutencoes = await db.Read("manutencao");
+
+    const resumo = {
+      chamados: {
+        total: totalChamados.length,
+        abertos: totalChamados.filter(c => c.status === 'aberto').length,
+        em_atendimento: totalChamados.filter(c => c.status === 'em_atendimento').length,
+        resolvidos: totalChamados.filter(c => c.status === 'resolvido').length,
+      },
+      equipamentos: {
+        total: totalEquipamentos.length,
+        disponiveis: totalEquipamentos.filter(e => e.status === 'disponivel').length,
+        manutencao: totalEquipamentos.filter(e => e.status === 'manutencao').length,
+        alugados: totalEquipamentos.filter(e => e.status === 'alugado').length,
+      },
+      usuarios: totalUsuarios.length,
+      financeiro: {
+        custo_manutencao: manutencoes.reduce((acc, m) => acc + (parseFloat(m.custo) || 0), 0)
+      }
+    };
+
     return res.status(200).json({
       sucesso: true,
-      mensagem: "Resumo do dashboard lido com sucesso",
-      dados: {
-        chamados: resumoChamados,
-        equipamentos: resumoEquipamentos
-      }
-    })
+      mensagem: "Dashboard admin recuperado",
+      dados: resumo
+    });
   } catch (e) {
     return res.status(500).json({
       sucesso: false,
-      mensagem: "Erro ao ler o resumo do dashboard",
+      mensagem: "Erro ao carregar dashboard admin",
       erro: e.message
-    })
+    });
   }
-  
 };
 
-// GET /dashboard/tecnico - chamados abertos/em andamento (técnico/admin)
-// Usa a view: view_painel_tecnico
+// GET /dashboard/tecnico - painel do técnico
 const painelTecnico = async (req, res) => {
-  // TODO
   try {
-    const painel = await db.Read("view_painel_tecnico")
+    const tecnico_id = req.usuario.id;
+    
+    const abertos = await db.Read("chamados", "status = 'aberto'");
+    const meusChamados = await db.Read("chamados", `tecnico_id = ${tecnico_id} AND status = 'em_atendimento'`);
+    
     return res.status(200).json({
       sucesso: true,
-      mensagem: "Painel do técnico lido com sucesso",
-      dados: painel
-    })
+      mensagem: "Painel técnico recuperado",
+      dados: {
+        disponiveis: abertos,
+        em_andamento: meusChamados
+      }
+    });
   } catch (e) {
     return res.status(500).json({
       sucesso: false,
-      mensagem: "Erro ao ler o painel do técnico",
+      mensagem: "Erro ao carregar painel técnico",
       erro: e.message
-    })
+    });
   }
 };
 

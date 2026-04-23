@@ -1,126 +1,119 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [erro, setErro] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setErro(null);
     setLoading(true);
+    setError("");
+
     try {
       const res = await fetch("http://localhost:3001/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, senha }),
       });
+
       const data = await res.json();
-      if (res.ok) {
+
+      if (data.sucesso) {
+        // Persistência robusta
         localStorage.setItem("techrent_token", data.token);
         localStorage.setItem("techrent_user", JSON.stringify(data.dados));
-        const role = data.dados?.nivel_acesso;
-        if (role === "admin") router.push("/dashboard");
-        else if (role === "tecnico") router.push("/chamados-tecnico");
+
+        // Redirecionamento por tipo de usuário
+        const nivel = data.dados.nivel_acesso;
+        if (nivel === "admin") router.push("/dashboard");
+        else if (nivel === "tecnico") router.push("/chamados-tecnico");
         else router.push("/meus-chamados");
+        
+        // Pequeno delay para garantir que o router inicie a transição antes do reload
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       } else {
-        setErro(data.mensagem || "Email ou senha incorretos");
+        setError(data.mensagem || "Erro ao realizar login");
       }
-    } catch {
-      setErro("Nao foi possivel conectar ao servidor");
+    } catch (err) {
+      setError("Não foi possível conectar ao servidor");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div style={{
-          position:"absolute",top:"20%",left:"50%",transform:"translateX(-50%)",
-          width:"600px",height:"600px",
-          background:"radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)",
-          borderRadius:"50%"
-        }} />
-      </div>
-      <div className="w-full max-w-md relative z-10 animate-fade-in">
-        <div className="text-center mb-8 space-y-3">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl text-white font-bold text-xl"
-            style={{background:"linear-gradient(135deg, #2563eb, #4f46e5)"}}>T</div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-100">TechRent</h1>
-            <p className="text-sm text-slate-500 mt-1">Sistema de Gerenciamento de TI</p>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+      <div className="w-full max-w-md animate-scale-in">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-6 group">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-xl shadow-blue-600/20 group-hover:scale-110 transition-transform">T</div>
+            <span className="text-2xl font-bold text-white tracking-tight">TechRent</span>
+          </Link>
+          <h1 className="text-2xl font-bold text-white">Bem-vindo de volta</h1>
+          <p className="text-slate-400 mt-2">Entre com suas credenciais para acessar o painel</p>
         </div>
-        <div className="rounded-2xl p-8 space-y-6 animate-slide-in-from-bottom"
-          style={{background:"rgba(13,21,38,0.8)",border:"1px solid rgba(99,130,200,0.15)",backdropFilter:"blur(20px)",boxShadow:"0 24px 64px rgba(0,0,0,0.4)"}}>
-          <div>
-            <h2 className="text-xl font-semibold text-slate-100">Bem-vindo de volta</h2>
-            <p className="text-sm text-slate-500 mt-1">Entre com suas credenciais para continuar</p>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-300">Email</label>
-              <input type="email" placeholder="seu@email.com" value={email}
-                onChange={(e) => setEmail(e.target.value)} disabled={loading} required
-                className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-200 placeholder-slate-600 transition-all duration-200"
-                style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(99,130,200,0.15)",outline:"none"}}
-                onFocus={(e) => e.target.style.borderColor="rgba(59,130,246,0.5)"}
-                onBlur={(e) => e.target.style.borderColor="rgba(99,130,200,0.15)"} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-300">Senha</label>
-              <input type="password" placeholder="••••••••" value={senha}
-                onChange={(e) => setSenha(e.target.value)} disabled={loading} required
-                className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-200 placeholder-slate-600 transition-all duration-200"
-                style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(99,130,200,0.15)",outline:"none"}}
-                onFocus={(e) => e.target.style.borderColor="rgba(59,130,246,0.5)"}
-                onBlur={(e) => e.target.style.borderColor="rgba(99,130,200,0.15)"} />
-            </div>
-            {erro && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-red-400"
-                style={{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)"}}>
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                {erro}
+
+        <div className="card p-8 bg-slate-900/50 border-slate-800">
+          <form onSubmit={handleLogin} className="space-y-5">
+            {error && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center animate-fade-in">
+                {error}
               </div>
             )}
-            <button type="submit" disabled={loading}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 mt-2 disabled:opacity-50"
-              style={{background:"linear-gradient(135deg, #2563eb, #3b82f6)"}}>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
+              <input
+                type="email"
+                required
+                className="input-base w-full bg-slate-950 border-slate-800"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-slate-300">Senha</label>
+                <a href="#" className="text-xs text-blue-400 hover:text-blue-300">Esqueceu a senha?</a>
+              </div>
+              <input
+                type="password"
+                required
+                className="input-base w-full bg-slate-950 border-slate-800"
+                placeholder="••••••••"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full py-3 mt-2"
+            >
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                  </svg>
-                  Entrando...
-                </span>
-              ) : "Entrar"}
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                "Entrar na conta"
+              )}
             </button>
           </form>
-          <div className="pt-2 border-t text-center" style={{borderColor:"rgba(99,130,200,0.1)"}}>
-            <p className="text-sm text-slate-500">Nao tem uma conta? <span className="text-blue-400">Contate o administrador</span></p>
-          </div>
-        </div>
-        <div className="mt-4 rounded-xl p-4 animate-slide-in-from-bottom" style={{animationDelay:"0.1s",background:"rgba(13,21,38,0.5)",border:"1px solid rgba(99,130,200,0.1)"}}>
-          <p className="text-xs text-slate-500 text-center mb-3 font-medium uppercase tracking-wide">Credenciais de Teste</p>
-          <div className="grid grid-cols-3 gap-3 text-xs">
-            {[
-              {role:"Cliente",email:"cliente@example.com",color:"#93c5fd"},
-              {role:"Tecnico",email:"tecnico@example.com",color:"#c4b5fd"},
-              {role:"Admin",email:"admin@example.com",color:"#fbbf24"},
-            ].map((c) => (
-              <div key={c.role} className="text-center space-y-1">
-                <p className="font-medium" style={{color:c.color}}>{c.role}</p>
-                <p className="text-slate-500 font-mono text-xs break-all">{c.email}</p>
-              </div>
-            ))}
+
+          <div className="mt-8 pt-6 border-t border-slate-800 text-center">
+            <p className="text-sm text-slate-400">
+              Acesso restrito. Problemas no acesso? <br/>
+              <span className="text-slate-500">Contate o suporte técnico</span>
+            </p>
           </div>
         </div>
       </div>
