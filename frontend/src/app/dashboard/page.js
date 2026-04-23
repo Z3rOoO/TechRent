@@ -114,31 +114,31 @@ export default function DashboardPage() {
   const { chamados, equipamentos, usuarios, manutencoes } = dados;
 
   const chamadosStatusData = (chamados.por_status || []).map(r => ({
-    name: r.status.replace("_", " "),
-    value: Number(r.total),
+    name: (r.status || "desconhecido").replace("_", " "),
+    value: Number(r.total || 0),
     fill: STATUS_CHAMADO_COLORS[r.status] || "#6b7280"
   }));
 
   const chamadosPrioridadeData = (chamados.por_prioridade || []).map(r => ({
-    name: r.prioridade,
-    total: Number(r.total),
+    name: r.prioridade || "desconhecida",
+    total: Number(r.total || 0),
     fill: PRIORIDADE_COLORS[r.prioridade] || "#6b7280"
   }));
 
   const equipStatusData = (equipamentos.por_status || []).map(r => ({
-    name: r.status.replace("_", " "),
-    value: Number(r.total),
+    name: (r.status || "desconhecido").replace("_", " "),
+    value: Number(r.total || 0),
     fill: STATUS_EQUIP_COLORS[r.status] || "#6b7280"
   }));
 
   const tecnicoData = (chamados.por_tecnico || []).map(r => ({
-    name: r.tecnico.split(" ")[0],
-    chamados: Number(r.total)
+    name: (r.tecnico || "desconhecido").split(" ")[0],
+    chamados: Number(r.total || 0)
   }));
 
   const mesesData = (manutencoes.por_mes || []).map(r => ({
-    mes: r.mes,
-    total: Number(r.total)
+    mes: r.mes || "desconhecido",
+    total: Number(r.total || 0)
   }));
 
   return (

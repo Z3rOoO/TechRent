@@ -96,7 +96,7 @@ export default function ManutencaoPage() {
                         Chamado: {r.chamado_titulo}
                         {r.chamado_status && (
                           <span className={`ml-1 ${r.chamado_status === "resolvido" ? "text-emerald-400" : "text-amber-400"}`}>
-                            ({r.chamado_status.replace("_", " ")})
+                            ({r.chamado_status?.replace("_", " ")})
                           </span>
                         )}
                       </Link>
