@@ -47,11 +47,11 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" })
 
       {/* Modal */}
       <div
-        className={`relative bg-slate-900 border border-slate-700/50 rounded-xl shadow-2xl ${sizeClasses[size]} w-full mx-4 animate-slide-in-from-bottom z-10`}
+        className={`relative bg-slate-900 border border-slate-700/50 rounded-xl shadow-2xl ${sizeClasses[size]} w-full mx-3 md:mx-4 animate-slide-in-from-bottom z-10 max-h-[90vh] md:max-h-[calc(100vh-100px)] flex flex-col`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-700/30 p-6">
-          <h2 className="text-xl font-bold text-slate-100">{title}</h2>
+        <div className="flex items-center justify-between border-b border-slate-700/30 p-4 md:p-6 shrink-0">
+          <h2 className="text-lg md:text-xl font-bold text-slate-100 truncate">{title}</h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-200 transition-colors p-1 hover:bg-slate-700/50 rounded"
@@ -64,7 +64,7 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" })
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+        <div className="p-4 md:p-6 overflow-y-auto flex-1">
           {children}
         </div>
       </div>

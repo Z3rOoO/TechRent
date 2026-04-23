@@ -13,10 +13,10 @@ const Button = React.forwardRef(
     };
 
     const sizes = {
-      sm: "px-3 py-1.5 text-xs rounded-md",
-      md: "px-4 py-2 text-sm rounded-lg",
-      lg: "px-6 py-3 text-base rounded-lg",
-      xl: "px-8 py-4 text-lg rounded-lg",
+      sm: "px-2 md:px-3 py-1.5 text-xs rounded-md",
+      md: "px-3 md:px-4 py-2 text-xs md:text-sm rounded-lg",
+      lg: "px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base rounded-lg",
+      xl: "px-6 md:px-8 py-3 md:py-4 text-base md:text-lg rounded-lg",
     };
 
     const baseClasses = cn(
